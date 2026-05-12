@@ -183,20 +183,20 @@ function createSeedDatabase() {
       { menu_id: "menu-10", category_id: "category-6", name: "Cola", description: "Refill drink glass", image_url: "/menu/cola.svg", is_available: false, deleted_at: minutesFromNow(-1440) }
     ],
     inventory_items: [
-      { ingredient_id: "ingredient-1", name: "Pork shoulder", unit: "g", quantity_on_hand: 9200, reorder_level: 2500, unit_cost: 0.18, deleted_at: null },
-      { ingredient_id: "ingredient-2", name: "Smoked bacon", unit: "g", quantity_on_hand: 3200, reorder_level: 1200, unit_cost: 0.24, deleted_at: null },
-      { ingredient_id: "ingredient-3", name: "Ribeye beef", unit: "g", quantity_on_hand: 1800, reorder_level: 1500, unit_cost: 0.62, deleted_at: null },
-      { ingredient_id: "ingredient-4", name: "Squid", unit: "g", quantity_on_hand: 2600, reorder_level: 1300, unit_cost: 0.31, deleted_at: null },
+      { ingredient_id: "ingredient-1", name: "Pork belly slices", unit: "g", quantity_on_hand: 7600, reorder_level: 2200, unit_cost: 0.22, deleted_at: null },
+      { ingredient_id: "ingredient-2", name: "Pork shoulder slices", unit: "g", quantity_on_hand: 9200, reorder_level: 2500, unit_cost: 0.18, deleted_at: null },
+      { ingredient_id: "ingredient-3", name: "Black pepper beef", unit: "g", quantity_on_hand: 1800, reorder_level: 1500, unit_cost: 0.62, deleted_at: null },
+      { ingredient_id: "ingredient-4", name: "Fresh squid", unit: "g", quantity_on_hand: 2600, reorder_level: 1300, unit_cost: 0.31, deleted_at: null },
       { ingredient_id: "ingredient-5", name: "White shrimp", unit: "pcs", quantity_on_hand: 48, reorder_level: 60, unit_cost: 5.2, deleted_at: null },
       { ingredient_id: "ingredient-6", name: "Napa cabbage", unit: "g", quantity_on_hand: 4200, reorder_level: 1800, unit_cost: 0.05, deleted_at: null },
       { ingredient_id: "ingredient-7", name: "Enoki mushroom", unit: "g", quantity_on_hand: 1600, reorder_level: 900, unit_cost: 0.11, deleted_at: null },
-      { ingredient_id: "ingredient-8", name: "Kimchi rice mix", unit: "g", quantity_on_hand: 5400, reorder_level: 1200, unit_cost: 0.08, deleted_at: null },
+      { ingredient_id: "ingredient-8", name: "Kimchi fried rice mix", unit: "g", quantity_on_hand: 5400, reorder_level: 1200, unit_cost: 0.08, deleted_at: null },
       { ingredient_id: "ingredient-9", name: "Thai tea concentrate", unit: "ml", quantity_on_hand: 2100, reorder_level: 800, unit_cost: 0.09, deleted_at: null },
       { ingredient_id: "ingredient-10", name: "Cola syrup", unit: "ml", quantity_on_hand: 0, reorder_level: 900, unit_cost: 0.07, deleted_at: minutesFromNow(-1440) }
     ],
     recipes: [
       { menu_id: "menu-1", ingredient_id: "ingredient-1", quantity_used: 120 },
-      { menu_id: "menu-2", ingredient_id: "ingredient-2", quantity_used: 90 },
+      { menu_id: "menu-2", ingredient_id: "ingredient-2", quantity_used: 120 },
       { menu_id: "menu-3", ingredient_id: "ingredient-3", quantity_used: 100 },
       { menu_id: "menu-4", ingredient_id: "ingredient-4", quantity_used: 120 },
       { menu_id: "menu-5", ingredient_id: "ingredient-5", quantity_used: 6 },
@@ -248,9 +248,9 @@ function createSeedDatabase() {
       { activity_id: "activity-5", user_id: "user-2", action: "expedite_order", entity_type: "order_item", entity_id: "orderItem-1003", occurred_at: minutesFromNow(-8) }
     ],
     inventory_transactions: [
-      { transaction_id: "transaction-1", ingredient_id: "ingredient-1", order_item_id: "orderItem-1005", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.18, occurred_at: minutesFromNow(-226) },
+      { transaction_id: "transaction-1", ingredient_id: "ingredient-1", order_item_id: "orderItem-1005", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.22, occurred_at: minutesFromNow(-226) },
       { transaction_id: "transaction-2", ingredient_id: "ingredient-8", order_item_id: "orderItem-1006", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.08, occurred_at: minutesFromNow(-225) },
-      { transaction_id: "transaction-3", ingredient_id: "ingredient-2", order_item_id: "orderItem-1007", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.24, occurred_at: minutesFromNow(-1345) },
+      { transaction_id: "transaction-3", ingredient_id: "ingredient-2", order_item_id: "orderItem-1007", transaction_type: "usage", quantity_change: -480, unit_cost_snapshot: 0.18, occurred_at: minutesFromNow(-1345) },
       { transaction_id: "transaction-4", ingredient_id: "ingredient-4", order_item_id: "orderItem-1008", transaction_type: "usage", quantity_change: -240, unit_cost_snapshot: 0.31, occurred_at: minutesFromNow(-1346) },
       { transaction_id: "transaction-5", ingredient_id: "ingredient-5", order_item_id: "orderItem-1009", transaction_type: "usage", quantity_change: -18, unit_cost_snapshot: 5.2, occurred_at: minutesFromNow(-1328) },
       { transaction_id: "transaction-6", ingredient_id: "ingredient-9", order_item_id: "orderItem-1010", transaction_type: "usage", quantity_change: -320, unit_cost_snapshot: 0.09, occurred_at: minutesFromNow(-1331) }
@@ -3107,12 +3107,16 @@ export default function Home() {
     return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 1 });
   }
 
+  function formatUnitCost(value) {
+    return `฿${Number(value || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
+
   function renderManagerInventory() {
     const ingredients = db.inventory_items.filter((item) => !item.deleted_at);
     const filteredIngredients = ingredients.filter((item) => {
       const query = inventorySearch.trim().toLowerCase();
       if (!query) return true;
-      return [item.name, inventoryCategory(item), item.ingredient_id, item.unit].some((value) => String(value).toLowerCase().includes(query));
+      return [item.name, item.unit, inventoryStatus(item).label].some((value) => String(value).toLowerCase().includes(query));
     });
     const lowStockCount = ingredients.filter((item) => item.quantity_on_hand > 0 && item.quantity_on_hand <= item.reorder_level).length;
     const outOfStockCount = ingredients.filter((item) => item.quantity_on_hand <= 0).length;
@@ -3163,7 +3167,7 @@ export default function Home() {
                 <div className="relative flex max-w-xl flex-1">
                   <input
                     className="!min-h-[58px] !rounded-lg !border-0 !bg-[#413131] !py-[17px] !pl-12 !pr-4 !text-base !text-[#F7DCDC] !outline-none placeholder:!text-[#E1BEBE]"
-                    placeholder="Search items, ingredient ID..."
+                    placeholder="Search inventory items..."
                     value={inventorySearch}
                     onChange={(event) => setInventorySearch(event.target.value)}
                   />
@@ -3198,11 +3202,10 @@ export default function Home() {
               ) : null}
 
               <section className="overflow-hidden rounded-xl border border-[#594040]/30 bg-[#2A1C1C]/70">
-                <div className="grid grid-cols-[1.25fr_0.75fr_0.8fr_0.85fr_0.9fr_1.95fr] items-center border-b border-[#594040] bg-[#362626] text-xs font-medium uppercase leading-4 tracking-[0.1em] text-[#E1BEBE]">
+                <div className="grid grid-cols-[1.4fr_0.65fr_0.75fr_0.75fr_2.45fr] items-center border-b border-[#594040] bg-[#362626] text-xs font-medium uppercase leading-4 tracking-[0.1em] text-[#E1BEBE]">
                   <p className="px-6 py-6">Item Name</p>
-                  <p className="px-6 py-6">Category</p>
-                  <p className="px-6 py-6">Ingredient ID</p>
                   <p className="px-6 py-6">Qty On Hand</p>
+                  <p className="px-6 py-6">Cost / Unit</p>
                   <p className="px-6 py-6 text-center">Status</p>
                   <p className="px-6 py-6 text-right">Action</p>
                 </div>
@@ -3244,21 +3247,23 @@ export default function Home() {
     const kioskOn = linkedMenus.length > 0 && linkedMenus.every((menu) => menu.is_available);
     const canToggle = linkedMenus.length > 0 && (kioskOn || item.quantity_on_hand > 0);
     return (
-      <div className="grid grid-cols-[1.25fr_0.75fr_0.8fr_0.85fr_0.9fr_1.95fr] items-center pr-6" key={item.ingredient_id}>
+      <div className="grid grid-cols-[1.4fr_0.65fr_0.75fr_0.75fr_2.45fr] items-center" key={item.ingredient_id}>
         <div className="px-6 py-6">
           <p className="text-base font-bold leading-6 text-[#F7DCDC]">{item.name}</p>
           <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E1BEBE]/60">{linkedMenus.length ? `${linkedMenus.length} iPad menu link${linkedMenus.length === 1 ? "" : "s"}` : "No iPad link"}</p>
         </div>
-        <p className="px-6 py-6 text-base leading-6 text-[#E1BEBE]">{inventoryCategory(item)}</p>
-        <p className="px-6 py-6 font-mono text-sm leading-5 text-[#F7DCDC]/60">{item.ingredient_id}</p>
         <div className="flex items-center gap-3 px-6 py-6">
           <p className={`text-base font-bold leading-6 ${status.key === "in" ? "text-[#F7DCDC]" : "text-[#FFB3B3]"}`}>{quantity.amount}</p>
           <p className="text-xs leading-4 text-[#E1BEBE]">{quantity.unit}</p>
         </div>
+        <div className="px-6 py-6">
+          <p className="text-sm font-bold leading-5 text-[#F7DCDC]">{formatUnitCost(item.unit_cost)}</p>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.12em] text-[#E1BEBE]/60">per {item.unit}</p>
+        </div>
         <div className="flex justify-center px-6 py-6">
           {renderInventoryStatusPill(status)}
         </div>
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex items-center justify-end gap-3 px-6 py-6">
           <form className="flex items-center gap-2" onSubmit={(event) => safe(() => handleAdjustStock(event))}>
             <input name="ingredient_id" type="hidden" value={item.ingredient_id} />
             <input
@@ -3334,16 +3339,6 @@ export default function Home() {
     );
   }
 
-  function inventoryCategory(item) {
-    const name = item.name.toLowerCase();
-    if (name.includes("beef") || name.includes("ribeye") || name.includes("wagyu")) return "Beef";
-    if (name.includes("pork") || name.includes("bacon")) return "Pork";
-    if (name.includes("shrimp") || name.includes("squid") || name.includes("sea")) return "Seafood";
-    if (name.includes("cabbage") || name.includes("mushroom") || name.includes("enoki")) return "Vegetables";
-    if (name.includes("tea") || name.includes("cola") || name.includes("rice") || name.includes("kimchi")) return "Sides and Drinks";
-    return "Pantry";
-  }
-
   function inventoryStatus(item) {
     if (item.quantity_on_hand <= 0) return { key: "out", label: "OUT OF STOCK" };
     if (item.quantity_on_hand <= item.reorder_level) return { key: "low", label: "LOW STOCK" };
@@ -3381,8 +3376,8 @@ export default function Home() {
   function exportInventoryReport() {
     const rows = db.inventory_items
       .filter((item) => !item.deleted_at)
-      .map((item) => [item.ingredient_id, item.name, inventoryCategory(item), item.quantity_on_hand, item.unit, item.reorder_level, item.unit_cost, inventoryStatus(item).label]);
-    const csv = [["Ingredient ID", "Item", "Category", "Qty On Hand", "Unit", "Reorder Level", "Unit Cost", "Status"], ...rows]
+      .map((item) => [item.name, item.quantity_on_hand, item.unit, item.reorder_level, item.unit_cost, inventoryStatus(item).label]);
+    const csv = [["Item", "Qty On Hand", "Unit", "Reorder Level", "Unit Cost", "Status"], ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
       .join("\n");
     const url = window.URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
