@@ -62,6 +62,8 @@ const CUSTOMER_CATEGORIES = [
     label: "Meat",
     nav: "Meat",
     categoryIds: ["category-1", "category-2"],
+    aliases: ["meat", "pork", "beef"],
+    fallbackVisual: "belly",
     kicker: "SIGNATURE CUTS",
     title: "The Butcher's Selection",
     description: "Premium ethically sourced meats, dry-aged for 28 days and marinated in our house-made botanical infusions."
@@ -71,6 +73,8 @@ const CUSTOMER_CATEGORIES = [
     label: "Seafood",
     nav: "Seafood",
     categoryIds: ["category-3"],
+    aliases: ["seafood", "fish", "shrimp", "squid"],
+    fallbackVisual: "shrimp",
     kicker: "OCEAN PICKS",
     title: "Seafood Counter",
     description: "Clean, chilled seafood portions prepared for hotpot service and sent directly to the kitchen pass."
@@ -80,18 +84,22 @@ const CUSTOMER_CATEGORIES = [
     label: "Vegetable",
     nav: "Vegetables",
     categoryIds: ["category-4"],
+    aliases: ["vegetable", "vegetables", "mushroom", "cabbage", "greens"],
+    fallbackVisual: "greens",
     kicker: "GARDEN BASKET",
     title: "Vegetable Harvest",
     description: "Fresh greens and mushrooms selected to balance the broth and keep every round bright."
   },
   {
-    key: "drinks",
-    label: "Drinks & Desserts",
-    nav: "Drinks",
+    key: "sides-drinks",
+    label: "Sides & Drinks",
+    nav: "Sides & Drinks",
     categoryIds: ["category-5", "category-6"],
-    kicker: "FINAL NOTES",
-    title: "Drinks & Desserts",
-    description: "Refill drinks and small finishing plates for the table, grouped together for quick repeat orders."
+    aliases: ["side", "sides", "drink", "drinks", "beverage", "beverages", "snack", "snacks", "rice", "kimchi", "tea", "cola", "soda"],
+    fallbackVisual: "drink",
+    kicker: "SIDES & DRINKS",
+    title: "Sides & Drinks",
+    description: "Kimchi fried rice, small side plates, and refill drinks grouped together for quick repeat orders."
   }
 ];
 
@@ -159,8 +167,8 @@ function createSeedDatabase() {
       { category_id: "category-2", name: "Beef" },
       { category_id: "category-3", name: "Seafood" },
       { category_id: "category-4", name: "Vegetables" },
-      { category_id: "category-5", name: "Snacks" },
-      { category_id: "category-6", name: "Drinks" }
+      { category_id: "category-5", name: "Sides and Drinks" },
+      { category_id: "category-6", name: "Sides and Drinks" }
     ],
     menu_items: [
       { menu_id: "menu-1", category_id: "category-1", name: "Marinated Pork Belly", description: "Soy-garlic pork belly tray", image_url: "/menu/pork-belly.svg", is_available: true, deleted_at: null },
@@ -516,9 +524,16 @@ export default function Home() {
     return session.adult_count + session.child_count;
   }
 
-  // The customer menu groups detailed database categories into the four iPad tabs.
+  // The customer menu groups Supabase categories by name, with old seed IDs as fallback.
   function customerCategoryForItem(item) {
-    return CUSTOMER_CATEGORIES.find((category) => category.categoryIds.includes(item.category_id)) || CUSTOMER_CATEGORIES[0];
+    const sourceCategory = helpers.categoryById(item.category_id);
+    const haystack = `${sourceCategory?.name || ""} ${item.name || ""}`.toLowerCase();
+    return (
+      CUSTOMER_CATEGORIES.find((category) => category.aliases?.some((alias) => haystack.includes(alias))) ||
+      CUSTOMER_CATEGORIES.find((category) => category.categoryIds.includes(item.category_id)) ||
+      CUSTOMER_CATEGORIES.find((category) => category.key === "sides-drinks") ||
+      CUSTOMER_CATEGORIES[0]
+    );
   }
 
   // Presentation keeps visual style separate from menu names stored in Supabase.
@@ -527,7 +542,7 @@ export default function Home() {
     return {
       ...item,
       displayName: item.name,
-      visual: presentation.visual || customerCategoryForItem(item).key
+      visual: presentation.visual || customerCategoryForItem(item).fallbackVisual
     };
   }
 
@@ -2042,7 +2057,7 @@ export default function Home() {
     const selectedTable = selectedSession ? helpers.tableById(selectedSession.table_id) : null;
     const activeCategory = CUSTOMER_CATEGORIES.find((category) => category.key === customerCategory) || CUSTOMER_CATEGORIES[0];
     const activeMenu = db.menu_items
-      .filter((item) => item.is_available && !item.deleted_at && activeCategory.categoryIds.includes(item.category_id))
+      .filter((item) => item.is_available && !item.deleted_at && customerCategoryForItem(item).key === activeCategory.key)
       .map((item) => customerMenuPresentation(item));
     const remainingMinutes = selectedSession ? diningRemainingMinutes(selectedSession) : 0;
     if (customerHistoryOpen) return renderCustomerOrderHistoryScreen(selectedSession, selectedTable, remainingMinutes);
@@ -2116,7 +2131,7 @@ export default function Home() {
         </svg>
       );
     }
-    if (categoryKey === "vegetable") {
+    if (categoryKey === "sides" || categoryKey === "vegetable") {
       return (
         <svg {...iconProps}>
           <path d="M5 13C5 7.8 9.2 4 16.5 3.5C17 10.8 13.2 15 8 15H5V13Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
@@ -2125,7 +2140,7 @@ export default function Home() {
         </svg>
       );
     }
-    if (categoryKey === "drinks") {
+    if (categoryKey === "drinks" || categoryKey === "sides-drinks") {
       return (
         <svg {...iconProps}>
           <path d="M5 4H19L13 11V18H17V20H7V18H11V11L5 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
@@ -3325,7 +3340,7 @@ export default function Home() {
     if (name.includes("pork") || name.includes("bacon")) return "Pork";
     if (name.includes("shrimp") || name.includes("squid") || name.includes("sea")) return "Seafood";
     if (name.includes("cabbage") || name.includes("mushroom") || name.includes("enoki")) return "Vegetables";
-    if (name.includes("tea") || name.includes("cola")) return "Drinks";
+    if (name.includes("tea") || name.includes("cola") || name.includes("rice") || name.includes("kimchi")) return "Sides and Drinks";
     return "Pantry";
   }
 

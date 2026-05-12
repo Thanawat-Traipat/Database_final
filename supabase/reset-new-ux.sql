@@ -510,8 +510,8 @@ insert into menu_categories (category_id, name) values
   (2, 'Beef'),
   (3, 'Seafood'),
   (4, 'Vegetables'),
-  (5, 'Snacks'),
-  (6, 'Drinks')
+  (5, 'Sides and Drinks'),
+  (6, 'Sides and Drinks')
 on conflict (category_id) do update set name = excluded.name;
 
 insert into inventory_items (ingredient_id, name, unit, quantity_on_hand, reorder_level, unit_cost, deleted_at) values
