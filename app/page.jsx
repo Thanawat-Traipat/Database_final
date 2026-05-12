@@ -1545,7 +1545,7 @@ export default function Home() {
   function renderLogin() {
     return (
       <main className="figma-login absolute left-0 top-0 flex min-h-screen min-w-full items-start bg-[#1A1111]">
-        <section className="figma-login-visual relative flex min-h-screen w-[448px] shrink-0 items-center justify-center overflow-hidden bg-[#180B0A]">
+        <section className="figma-login-visual relative flex min-h-screen w-[clamp(448px,38vw,680px)] shrink-0 items-center justify-center overflow-hidden bg-[#180B0A]">
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(29,16,15,0.40)_0%,rgba(29,16,15,0.88)_100%)]" />
           <img
             src="/login-charcoal.svg"
@@ -1559,13 +1559,13 @@ export default function Home() {
             </p>
             <div className="h-px w-16 bg-[#FFB3AF] opacity-60" />
             <p className="w-fit font-manrope text-sm font-light leading-5 tracking-[0.2em] text-[#E2BEBB]">
-              EXCELLENCE AFTER DARK
+              FRESH FEASTS, HAPPY TABLES
             </p>
           </div>
         </section>
 
-        <section className="flex min-h-screen w-[680px] shrink-0 items-center justify-center bg-[#1A1111] px-6 py-12">
-          <div className="flex w-[396px] shrink-0 flex-col items-start gap-9">
+        <section className="flex min-h-screen flex-1 items-center justify-center bg-[#1A1111] px-[clamp(3rem,8vw,12rem)] py-12">
+          <div className="flex w-full max-w-[560px] shrink-0 flex-col items-start gap-9">
             <div className="flex w-full flex-col items-start gap-2">
               <p className="w-full font-epilogue text-2xl font-bold leading-8 tracking-[0.3em] text-[#F8DCDA]">
                 STAFF PORTAL
@@ -1623,20 +1623,6 @@ export default function Home() {
               </button>
             </form>
 
-            <div className="flex w-full flex-col items-center gap-4 pb-14 pt-2">
-              <button className="figma-text-button bg-transparent p-0 font-manrope text-xs leading-5 tracking-[0.1em] text-[#AA8987] underline underline-offset-2" type="button">
-                FORGOT CREDENTIALS? CONTACT MANAGER
-              </button>
-            </div>
-
-            <div className="flex w-full items-start justify-between border-t border-t-[rgba(90,64,63,0.10)] pt-8 opacity-60">
-              <p className="font-manrope text-xs leading-[18px] tracking-[0.1em] text-[#F8DCDA]">
-                V4.2.0.SECURE
-              </p>
-              <p className="font-manrope text-xs leading-[18px] tracking-[0.1em] text-[#F8DCDA]">
-                STATION: NOT SET
-              </p>
-            </div>
           </div>
         </section>
       </main>
