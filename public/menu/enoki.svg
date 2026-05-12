@@ -1,0 +1,12 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#130E0B"/>
+  <circle cx="124" cy="94" r="118" fill="#D6A45A" opacity="0.28"/>
+  <ellipse cx="320" cy="316" rx="230" ry="40" fill="#050303" opacity="0.68"/>
+  <g stroke="#E7D8BE" stroke-width="9" stroke-linecap="round">
+    <path d="M246 286V164"/><path d="M282 290V146"/><path d="M320 292V138"/><path d="M358 290V150"/><path d="M394 286V168"/>
+  </g>
+  <g fill="#F2E6D0">
+    <circle cx="246" cy="150" r="24"/><circle cx="282" cy="132" r="25"/><circle cx="320" cy="122" r="27"/><circle cx="358" cy="136" r="25"/><circle cx="394" cy="154" r="24"/>
+  </g>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Enoki Mushroom</text>
+</svg>

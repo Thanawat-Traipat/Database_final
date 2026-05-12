@@ -1,0 +1,9 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#170D0D"/>
+  <circle cx="120" cy="92" r="104" fill="#A6192E" opacity="0.35"/>
+  <ellipse cx="320" cy="314" rx="230" ry="40" fill="#050303" opacity="0.65"/>
+  <path d="M188 154H452C488 154 516 184 510 220C502 268 458 294 320 294C182 294 138 268 130 220C124 184 152 154 188 154Z" fill="#D46A57"/>
+  <path d="M176 208C246 190 286 238 348 212C398 192 434 204 482 226" stroke="#F7DCDC" stroke-width="12" stroke-linecap="round" opacity="0.55"/>
+  <path d="M216 170C270 190 322 176 374 164" stroke="#6C211F" stroke-width="10" stroke-linecap="round" opacity="0.5"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Premium Pork Shoulder</text>
+</svg>

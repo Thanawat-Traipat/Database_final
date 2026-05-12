@@ -1,0 +1,10 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#100909"/>
+  <circle cx="120" cy="96" r="118" fill="#A6192E" opacity="0.28"/>
+  <ellipse cx="320" cy="318" rx="210" ry="36" fill="#050303" opacity="0.7"/>
+  <path d="M248 128H392L372 318H268L248 128Z" fill="#F7DCDC" opacity="0.8"/>
+  <path d="M262 178H378L364 306H276L262 178Z" fill="#2A1110"/>
+  <path d="M258 140H382L378 178H262L258 140Z" fill="#F3E1D7"/>
+  <g fill="#F7DCDC" opacity="0.85"><circle cx="300" cy="218" r="7"/><circle cx="336" cy="242" r="5"/><circle cx="318" cy="274" r="6"/></g>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Cola</text>
+</svg>

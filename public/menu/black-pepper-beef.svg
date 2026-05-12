@@ -1,0 +1,11 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#13090A"/>
+  <circle cx="508" cy="96" r="128" fill="#B5001C" opacity="0.38"/>
+  <ellipse cx="320" cy="318" rx="236" ry="42" fill="#050303" opacity="0.7"/>
+  <path d="M160 210C160 156 214 126 318 126C422 126 482 158 482 210C482 272 426 300 318 300C210 300 160 272 160 210Z" fill="#78241F"/>
+  <path d="M190 206C248 170 396 170 450 208" stroke="#E66C55" stroke-width="34" stroke-linecap="round"/>
+  <g fill="#111">
+    <circle cx="230" cy="168" r="6"/><circle cx="276" cy="156" r="5"/><circle cx="338" cy="162" r="7"/><circle cx="404" cy="178" r="5"/><circle cx="444" cy="220" r="6"/>
+  </g>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Black Pepper Beef</text>
+</svg>

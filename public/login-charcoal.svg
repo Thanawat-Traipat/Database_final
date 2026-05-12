@@ -1,0 +1,77 @@
+<svg width="448" height="900" viewBox="0 0 448 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="448" height="900" fill="#120908"/>
+  <defs>
+    <radialGradient id="emberA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(192 568) rotate(82) scale(250 170)">
+      <stop stop-color="#FF8A24"/>
+      <stop offset="0.28" stop-color="#9E250E"/>
+      <stop offset="0.74" stop-color="#1C0C09"/>
+      <stop offset="1" stop-color="#050404" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="emberB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(284 612) rotate(60) scale(220 130)">
+      <stop stop-color="#FFB34E"/>
+      <stop offset="0.22" stop-color="#B83A12"/>
+      <stop offset="0.68" stop-color="#1A0B08"/>
+      <stop offset="1" stop-color="#080505" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="smokeBlue" x1="188" y1="-20" x2="224" y2="456" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#41637B" stop-opacity="0.55"/>
+      <stop offset="0.42" stop-color="#6F9AB8" stop-opacity="0.42"/>
+      <stop offset="0.78" stop-color="#263846" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#111" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="blurLarge" x="-80" y="-80" width="608" height="1060" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+    <filter id="blurSmall" x="-40" y="-40" width="528" height="980" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
+  </defs>
+
+  <rect width="448" height="900" fill="url(#emberA)" opacity="0.92"/>
+  <rect width="448" height="900" fill="url(#emberB)" opacity="0.8"/>
+
+  <g filter="url(#blurLarge)" opacity="0.72">
+    <path d="M88 31C137 97 99 145 135 208C176 281 253 309 242 398" stroke="url(#smokeBlue)" stroke-width="34" stroke-linecap="round"/>
+    <path d="M191 -18C239 64 198 122 232 202C270 292 350 341 311 436" stroke="url(#smokeBlue)" stroke-width="38" stroke-linecap="round"/>
+    <path d="M294 -8C247 85 300 162 279 238C259 312 195 353 206 433" stroke="url(#smokeBlue)" stroke-width="30" stroke-linecap="round"/>
+    <path d="M54 93C24 168 83 236 68 319C57 381 22 431 42 499" stroke="#6F9AB8" stroke-opacity="0.36" stroke-width="24" stroke-linecap="round"/>
+  </g>
+
+  <g filter="url(#blurSmall)">
+    <ellipse cx="154" cy="592" rx="89" ry="47" fill="#090807"/>
+    <ellipse cx="277" cy="642" rx="115" ry="50" fill="#080706"/>
+    <ellipse cx="65" cy="688" rx="86" ry="45" fill="#080706"/>
+    <ellipse cx="210" cy="756" rx="164" ry="55" fill="#070605"/>
+  </g>
+
+  <g opacity="0.94">
+    <path d="M157 483C209 463 287 489 329 544C274 569 221 565 173 528C159 516 150 500 157 483Z" fill="#342A22"/>
+    <path d="M165 489C214 472 284 499 318 542C274 559 222 553 181 523C169 514 162 501 165 489Z" fill="#1A1714"/>
+    <path d="M186 497L299 538" stroke="#6A3C21" stroke-opacity="0.7" stroke-width="7"/>
+    <path d="M224 492L319 528" stroke="#754523" stroke-opacity="0.65" stroke-width="6"/>
+    <path d="M207 533L292 560" stroke="#080606" stroke-width="10"/>
+  </g>
+
+  <g opacity="0.95">
+    <path d="M17 656C69 617 145 627 196 681C145 727 63 733 9 697C-7 686 1 668 17 656Z" fill="#28211D"/>
+    <path d="M25 664C76 634 138 641 181 681C138 714 69 720 21 692C9 685 11 673 25 664Z" fill="#11100E"/>
+    <path d="M38 675C89 674 123 678 169 690" stroke="#463228" stroke-width="8" stroke-opacity="0.7"/>
+  </g>
+
+  <g opacity="0.94">
+    <path d="M253 582C300 548 386 565 433 632C391 673 303 683 253 626C237 608 239 592 253 582Z" fill="#30271F"/>
+    <path d="M263 591C308 566 379 580 417 631C376 660 312 665 269 620C258 608 256 598 263 591Z" fill="#14110F"/>
+    <path d="M285 592L406 634" stroke="#654123" stroke-width="8" stroke-opacity="0.62"/>
+    <path d="M310 574L393 663" stroke="#070504" stroke-width="9" stroke-opacity="0.8"/>
+  </g>
+
+  <rect width="448" height="900" fill="url(#fade)"/>
+  <defs>
+    <linearGradient id="fade" x1="224" y1="0" x2="224" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#000" stop-opacity="0.1"/>
+      <stop offset="0.48" stop-color="#1D100F" stop-opacity="0.22"/>
+      <stop offset="0.78" stop-color="#000" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.82"/>
+    </linearGradient>
+  </defs>
+</svg>

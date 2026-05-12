@@ -1,0 +1,9 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#0D1517"/>
+  <circle cx="500" cy="88" r="122" fill="#8BD2DA" opacity="0.28"/>
+  <ellipse cx="320" cy="312" rx="230" ry="40" fill="#020405" opacity="0.7"/>
+  <path d="M216 156C266 120 378 120 426 156C456 178 454 230 420 260C374 302 260 302 218 260C184 226 184 180 216 156Z" fill="#E1BEBE"/>
+  <path d="M246 262C230 288 216 306 194 324M296 274C286 304 282 322 270 342M344 274C354 304 358 322 370 342M394 262C410 288 424 306 446 324" stroke="#E1BEBE" stroke-width="12" stroke-linecap="round"/>
+  <circle cx="286" cy="182" r="8" fill="#241A1A"/><circle cx="354" cy="182" r="8" fill="#241A1A"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Fresh Squid</text>
+</svg>

@@ -1,0 +1,10 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#160B0B"/>
+  <circle cx="498" cy="86" r="126" fill="#8F1226" opacity="0.45"/>
+  <ellipse cx="320" cy="314" rx="238" ry="38" fill="#050303" opacity="0.65"/>
+  <rect x="126" y="154" width="390" height="88" rx="32" fill="#B74336"/>
+  <rect x="126" y="196" width="390" height="28" fill="#F6B08B" opacity="0.95"/>
+  <rect x="126" y="230" width="390" height="32" rx="14" fill="#6B241F"/>
+  <path d="M152 166C206 190 246 140 294 168C352 202 396 146 478 176" stroke="#FFD1A6" stroke-width="8" stroke-linecap="round" opacity="0.9"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Marinated Pork Belly</text>
+</svg>

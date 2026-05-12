@@ -1,0 +1,68 @@
+# Database Quality Review
+
+This file is a practical checklist for improving the project before submission. It focuses on what a database-management grader is likely to inspect: logical design, physical schema, constraints, queries, and evidence that the interface really uses the DBMS.
+
+## Current Strengths
+
+| Area | Status | Evidence |
+| --- | --- | --- |
+| Relational DBMS choice | Strong | PostgreSQL/Supabase fits table-session-order-inventory relationships |
+| Core entities | Strong | Staff, tables, sessions, orders, order items, menu, recipes, inventory, payments, shifts, audit logs |
+| Relationship modeling | Strong | Foreign keys connect operational workflows instead of storing repeated text |
+| Insert coverage | Strong | Sessions, orders, order items, staff shifts, payments, menu items, inventory items, users |
+| Update coverage | Strong | Table status, order status, payment state, stock, menu availability |
+| Soft delete coverage | Strong | `deleted_at` and `is_active` preserve historical references |
+| Advanced query coverage | Strong | Revenue, peak hour, top menu, cost per head, service speed, bottleneck, staff hours |
+| Interface/DB integration | Strong | App is Supabase-only and stops when Supabase env vars are missing |
+
+## Improvements Already Applied
+
+| Improvement | Why It Matters |
+| --- | --- |
+| Added `uq_open_session_per_table` | Prevents one table from accidentally having two open sessions |
+| Added `uq_active_shift_per_user` | Prevents duplicate active shifts for one staff user |
+| Added composite/partial indexes | Makes cashier grid, KDS queue, dashboard, and audit queries faster |
+| Updated ERD with `out_for_serving_at` | Waiter flow is now represented in the logical model |
+| Expanded data dictionary with samples | Satisfies the physical design requirement more clearly |
+| Reworked `queries.sql` numbering | Separates basic vs advanced queries and maps them to requirements |
+
+## What To Improve Next If You Have Time
+
+| Priority | Improvement | Why |
+| --- | --- | --- |
+| High | Add screenshots to the report manual | The rubric explicitly gives points for usage guide with screenshots |
+| High | Add a prompt log appendix | The assignment requires recording all AI prompts used |
+| High | Add comments around major source-code blocks | The rubric asks for source code comments explaining code; every line may be unrealistic, but each logical block should be documented |
+| Medium | Enable Supabase Realtime | Lets cashier, kitchen, waiter, customer, and manager screens update across separate devices without refresh |
+| Medium | Add Row Level Security policies | Better security story for Vercel deployment; for class demo, RLS can stay off if explained |
+| Medium | Replace demo password hashes | Use Supabase Auth or server-side hashing for a production-grade login |
+| Low | Add `business_day` handling | Restaurants often close after midnight, so reporting by calendar date can differ from business date |
+| Low | Add supplier/purchase-order tables | Would make inventory management more complete, but current assignment scope is already covered |
+
+## Query Efficiency Notes
+
+| Query Type | Index Support |
+| --- | --- |
+| Cashier 15-table grid | `idx_tables_active_status`, `idx_sessions_table_status_opened` |
+| Active session detail | `idx_orders_session_ordered`, `idx_order_items_order_status` |
+| Customer menu | `idx_menu_items_active_category` |
+| Kitchen queue | `idx_order_items_status_requested`, `idx_order_items_priority` |
+| Waiter queue | `idx_order_items_status_requested`, `idx_order_items_order_status` |
+| Dashboard revenue | `idx_payments_status_paid_at` |
+| Top menu | `idx_order_items_menu_id`, `idx_order_items_status_requested` |
+| Ingredient usage | `idx_transactions_type_occurred`, `idx_transactions_ingredient_occurred` |
+| Staff audit | `idx_staff_activity_occurred_desc` |
+
+## Report-Writing Notes
+
+Use these exact files as report sources:
+
+- Logical design: `docs/er-diagram.md`
+- Physical design: `docs/data-dictionary.md`
+- SQL schema: `supabase/schema.sql`
+- Seed data: `supabase/seed.sql`
+- Query examples: `supabase/queries.sql`
+- Supabase setup: `docs/supabase-sync.md`
+- Vercel deployment: `docs/vercel-deployment.md`
+- Requirement mapping: `docs/requirements-flow.md`
+- Project structure and logic: `docs/project-structure-and-logic.md`

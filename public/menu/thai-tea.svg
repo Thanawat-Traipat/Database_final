@@ -1,0 +1,10 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#150D0A"/>
+  <circle cx="502" cy="86" r="126" fill="#D63F4D" opacity="0.26"/>
+  <ellipse cx="320" cy="318" rx="210" ry="36" fill="#050303" opacity="0.7"/>
+  <path d="M244 132H396L374 318H266L244 132Z" fill="#F7DCDC" opacity="0.9"/>
+  <path d="M260 184H380L364 304H276L260 184Z" fill="#D76C22"/>
+  <path d="M256 146H384L380 184H260L256 146Z" fill="#FFF4E4"/>
+  <path d="M396 122C432 146 440 188 412 214" stroke="#E1BEBE" stroke-width="10" stroke-linecap="round"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Thai Iced Tea</text>
+</svg>

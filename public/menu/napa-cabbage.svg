@@ -1,0 +1,9 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#0E150F"/>
+  <circle cx="510" cy="88" r="128" fill="#8BD2DA" opacity="0.2"/>
+  <ellipse cx="320" cy="314" rx="226" ry="42" fill="#050303" opacity="0.68"/>
+  <path d="M320 112C250 154 216 218 224 292C280 302 360 302 416 292C424 218 390 154 320 112Z" fill="#BEE4AA"/>
+  <path d="M320 128V292M270 174C292 210 302 242 306 288M370 174C348 210 338 242 334 288" stroke="#477845" stroke-width="12" stroke-linecap="round"/>
+  <path d="M238 250C284 224 356 224 402 250" stroke="#F0F7D4" stroke-width="10" stroke-linecap="round" opacity="0.8"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Napa Cabbage</text>
+</svg>

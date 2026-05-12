@@ -1,0 +1,9 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#160B0B"/>
+  <circle cx="500" cy="88" r="126" fill="#A6192E" opacity="0.38"/>
+  <ellipse cx="320" cy="314" rx="232" ry="42" fill="#050303" opacity="0.7"/>
+  <path d="M178 218H462L424 314H216L178 218Z" fill="#F7DCDC"/>
+  <path d="M222 200C260 150 382 150 420 200C370 234 272 234 222 200Z" fill="#D74735"/>
+  <circle cx="282" cy="190" r="8" fill="#F8D57E"/><circle cx="336" cy="178" r="7" fill="#F8D57E"/><circle cx="372" cy="200" r="8" fill="#F8D57E"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">Kimchi Fried Rice</text>
+</svg>

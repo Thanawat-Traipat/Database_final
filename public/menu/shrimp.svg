@@ -1,0 +1,9 @@
+<svg width="640" height="420" viewBox="0 0 640 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#120C0C"/>
+  <circle cx="126" cy="92" r="112" fill="#8BD2DA" opacity="0.24"/>
+  <ellipse cx="320" cy="314" rx="228" ry="42" fill="#050303" opacity="0.68"/>
+  <path d="M188 218C220 146 326 120 410 158C482 190 502 260 438 286C370 314 280 272 278 218" stroke="#F27A5E" stroke-width="42" stroke-linecap="round"/>
+  <path d="M382 178L438 126M412 204L486 174M420 238L504 232" stroke="#FFD1C4" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="202" cy="208" r="7" fill="#241A1A"/>
+  <text x="52" y="72" fill="#F7DCDC" font-family="Arial, sans-serif" font-size="34" font-weight="700">White Shrimp</text>
+</svg>
