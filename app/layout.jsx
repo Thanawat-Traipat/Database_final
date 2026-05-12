@@ -19,7 +19,7 @@ const epilogue = Epilogue({
 
 // Metadata appears in the browser tab and deployment previews.
 export const metadata = {
-  title: "Eddy Buffet Database Demo",
+  title: "Yum Yum Buffet Database Demo",
   description: "Role-based buffet restaurant database final project prototype"
 };
 

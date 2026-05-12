@@ -50,14 +50,6 @@ const DEFAULT_VIEW_BY_ROLE = {
   manager: "manager-dashboard"
 };
 
-// Stations are stored on shifts so the audit trail knows where a staff login worked.
-const STATION_BY_ROLE = {
-  cashier: "Front POS",
-  kitchen: "Kitchen pass",
-  waiter: "Dining room",
-  manager: "Management office"
-};
-
 // Buffet pricing is shown directly in the cashier right rail.
 const ADULT_BUFFET_PRICE = 399;
 const CHILD_BUFFET_PRICE = 259;
@@ -131,17 +123,14 @@ function createSeedDatabase() {
     meta: {
       nextNumbers: {
         user: 5,
-        table: 16,
         category: 7,
         menu: 11,
         ingredient: 11,
-        recipe: 11,
         session: 1010,
         order: 1006,
-        orderItem: 1013,
+        orderItem: 1011,
         payment: 3,
         transaction: 7,
-        shift: 5,
         activity: 6
       }
     },
@@ -152,21 +141,21 @@ function createSeedDatabase() {
       { user_id: "user-4", full_name: "Eddy Manager", username: "manager", password: "manager123", role: "manager", is_active: true, deleted_at: null }
     ],
     restaurant_tables: [
-      { table_id: "table-1", table_code: "01", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-2", table_code: "02", zone: "Main", capacity: 4, status: "occupied", deleted_at: null },
-      { table_id: "table-3", table_code: "03", zone: "Main", capacity: 4, status: "cleaning", cleaning_started_at: minutesFromNow(-4), deleted_at: null },
-      { table_id: "table-4", table_code: "04", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-5", table_code: "05", zone: "Main", capacity: 4, status: "billing", deleted_at: null },
-      { table_id: "table-6", table_code: "06", zone: "Main", capacity: 4, status: "occupied", deleted_at: null },
-      { table_id: "table-7", table_code: "07", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-8", table_code: "08", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-9", table_code: "09", zone: "Main", capacity: 4, status: "occupied", deleted_at: null },
-      { table_id: "table-10", table_code: "10", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-11", table_code: "11", zone: "Main", capacity: 4, status: "occupied", deleted_at: null },
-      { table_id: "table-12", table_code: "12", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-13", table_code: "13", zone: "Main", capacity: 4, status: "occupied", deleted_at: null },
-      { table_id: "table-14", table_code: "14", zone: "Main", capacity: 4, status: "available", deleted_at: null },
-      { table_id: "table-15", table_code: "15", zone: "Main", capacity: 4, status: "billing", deleted_at: null }
+      { table_id: "01", table_code: "01", capacity: 4, status: "available" },
+      { table_id: "02", table_code: "02", capacity: 4, status: "occupied" },
+      { table_id: "03", table_code: "03", capacity: 4, status: "cleaning", cleaning_started_at: minutesFromNow(-4) },
+      { table_id: "04", table_code: "04", capacity: 4, status: "available" },
+      { table_id: "05", table_code: "05", capacity: 4, status: "billing" },
+      { table_id: "06", table_code: "06", capacity: 4, status: "occupied" },
+      { table_id: "07", table_code: "07", capacity: 4, status: "available" },
+      { table_id: "08", table_code: "08", capacity: 4, status: "available" },
+      { table_id: "09", table_code: "09", capacity: 4, status: "occupied" },
+      { table_id: "10", table_code: "10", capacity: 4, status: "available" },
+      { table_id: "11", table_code: "11", capacity: 4, status: "occupied" },
+      { table_id: "12", table_code: "12", capacity: 4, status: "available" },
+      { table_id: "13", table_code: "13", capacity: 4, status: "occupied" },
+      { table_id: "14", table_code: "14", capacity: 4, status: "available" },
+      { table_id: "15", table_code: "15", capacity: 4, status: "billing" }
     ],
     menu_categories: [
       { category_id: "category-1", name: "Pork" },
@@ -177,16 +166,16 @@ function createSeedDatabase() {
       { category_id: "category-6", name: "Drinks" }
     ],
     menu_items: [
-      { menu_id: "menu-1", category_id: "category-1", name: "Marinated Pork Belly", description: "Soy-garlic pork belly tray", image_url: "/menu/pork-belly.svg", kitchen_station: "hotpot", prep_time_minutes: 6, price: 0, is_available: true, deleted_at: null },
-      { menu_id: "menu-2", category_id: "category-1", name: "Premium Pork Shoulder", description: "120 g shabu pork shoulder tray", image_url: "/menu/pork-shoulder.svg", kitchen_station: "hotpot", prep_time_minutes: 5, price: 0, is_available: true, deleted_at: null },
-      { menu_id: "menu-3", category_id: "category-2", name: "Black Pepper Beef", description: "Pepper-crusted premium beef tray", image_url: "/menu/black-pepper-beef.svg", kitchen_station: "premium", prep_time_minutes: 8, price: 79, is_available: true, deleted_at: null },
-      { menu_id: "menu-4", category_id: "category-3", name: "Fresh Squid", description: "Cleaned squid portion", image_url: "/menu/squid.svg", kitchen_station: "seafood", prep_time_minutes: 7, price: 0, is_available: true, deleted_at: null },
-      { menu_id: "menu-5", category_id: "category-3", name: "White shrimp", description: "Six shrimp per plate", image_url: "/menu/shrimp.svg", kitchen_station: "seafood", prep_time_minutes: 7, price: 39, is_available: true, deleted_at: null },
-      { menu_id: "menu-6", category_id: "category-4", name: "Napa cabbage", description: "Fresh vegetable basket", image_url: "/menu/napa-cabbage.svg", kitchen_station: "pantry", prep_time_minutes: 3, price: 0, is_available: true, deleted_at: null },
-      { menu_id: "menu-7", category_id: "category-4", name: "Enoki mushroom", description: "Mushroom portion", image_url: "/menu/enoki.svg", kitchen_station: "pantry", prep_time_minutes: 3, price: 0, is_available: true, deleted_at: null },
-      { menu_id: "menu-8", category_id: "category-5", name: "Kimchi fried rice", description: "Small rice bowl", image_url: "/menu/kimchi-rice.svg", kitchen_station: "cooked", prep_time_minutes: 9, price: 29, is_available: true, deleted_at: null },
-      { menu_id: "menu-9", category_id: "category-6", name: "Thai iced tea", description: "Refill drink glass", image_url: "/menu/thai-tea.svg", kitchen_station: "drink", prep_time_minutes: 2, price: 35, is_available: true, deleted_at: null },
-      { menu_id: "menu-10", category_id: "category-6", name: "Cola", description: "Refill drink glass", image_url: "/menu/cola.svg", kitchen_station: "drink", prep_time_minutes: 2, price: 29, is_available: false, deleted_at: minutesFromNow(-1440) }
+      { menu_id: "menu-1", category_id: "category-1", name: "Marinated Pork Belly", description: "Soy-garlic pork belly tray", image_url: "/menu/pork-belly.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-2", category_id: "category-1", name: "Premium Pork Shoulder", description: "120 g shabu pork shoulder tray", image_url: "/menu/pork-shoulder.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-3", category_id: "category-2", name: "Black Pepper Beef", description: "Pepper-crusted premium beef tray", image_url: "/menu/black-pepper-beef.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-4", category_id: "category-3", name: "Fresh Squid", description: "Cleaned squid portion", image_url: "/menu/squid.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-5", category_id: "category-3", name: "White shrimp", description: "Six shrimp per plate", image_url: "/menu/shrimp.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-6", category_id: "category-4", name: "Napa cabbage", description: "Fresh vegetable basket", image_url: "/menu/napa-cabbage.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-7", category_id: "category-4", name: "Enoki mushroom", description: "Mushroom portion", image_url: "/menu/enoki.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-8", category_id: "category-5", name: "Kimchi fried rice", description: "Small rice bowl", image_url: "/menu/kimchi-rice.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-9", category_id: "category-6", name: "Thai iced tea", description: "Refill drink glass", image_url: "/menu/thai-tea.svg", is_available: true, deleted_at: null },
+      { menu_id: "menu-10", category_id: "category-6", name: "Cola", description: "Refill drink glass", image_url: "/menu/cola.svg", is_available: false, deleted_at: minutesFromNow(-1440) }
     ],
     inventory_items: [
       { ingredient_id: "ingredient-1", name: "Pork shoulder", unit: "g", quantity_on_hand: 9200, reorder_level: 2500, unit_cost: 0.18, deleted_at: null },
@@ -201,71 +190,65 @@ function createSeedDatabase() {
       { ingredient_id: "ingredient-10", name: "Cola syrup", unit: "ml", quantity_on_hand: 0, reorder_level: 900, unit_cost: 0.07, deleted_at: minutesFromNow(-1440) }
     ],
     recipes: [
-      { recipe_id: "recipe-1", menu_id: "menu-1", ingredient_id: "ingredient-1", quantity_used: 120 },
-      { recipe_id: "recipe-2", menu_id: "menu-2", ingredient_id: "ingredient-2", quantity_used: 90 },
-      { recipe_id: "recipe-3", menu_id: "menu-3", ingredient_id: "ingredient-3", quantity_used: 100 },
-      { recipe_id: "recipe-4", menu_id: "menu-4", ingredient_id: "ingredient-4", quantity_used: 120 },
-      { recipe_id: "recipe-5", menu_id: "menu-5", ingredient_id: "ingredient-5", quantity_used: 6 },
-      { recipe_id: "recipe-6", menu_id: "menu-6", ingredient_id: "ingredient-6", quantity_used: 150 },
-      { recipe_id: "recipe-7", menu_id: "menu-7", ingredient_id: "ingredient-7", quantity_used: 100 },
-      { recipe_id: "recipe-8", menu_id: "menu-8", ingredient_id: "ingredient-8", quantity_used: 180 },
-      { recipe_id: "recipe-9", menu_id: "menu-9", ingredient_id: "ingredient-9", quantity_used: 80 },
-      { recipe_id: "recipe-10", menu_id: "menu-10", ingredient_id: "ingredient-10", quantity_used: 70 }
+      { menu_id: "menu-1", ingredient_id: "ingredient-1", quantity_used: 120 },
+      { menu_id: "menu-2", ingredient_id: "ingredient-2", quantity_used: 90 },
+      { menu_id: "menu-3", ingredient_id: "ingredient-3", quantity_used: 100 },
+      { menu_id: "menu-4", ingredient_id: "ingredient-4", quantity_used: 120 },
+      { menu_id: "menu-5", ingredient_id: "ingredient-5", quantity_used: 6 },
+      { menu_id: "menu-6", ingredient_id: "ingredient-6", quantity_used: 150 },
+      { menu_id: "menu-7", ingredient_id: "ingredient-7", quantity_used: 100 },
+      { menu_id: "menu-8", ingredient_id: "ingredient-8", quantity_used: 180 },
+      { menu_id: "menu-9", ingredient_id: "ingredient-9", quantity_used: 80 },
+      { menu_id: "menu-10", ingredient_id: "ingredient-10", quantity_used: 70 }
     ],
     dining_sessions: [
-      { session_id: "session-1001", table_id: "table-2", cashier_id: "user-1", waiter_id: "user-3", adult_count: 3, child_count: 1, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-60), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null, customer_code: "T02-4821" },
-      { session_id: "session-1002", table_id: "table-5", cashier_id: "user-1", waiter_id: "user-3", adult_count: 2, child_count: 1, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-105), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-5), customer_code: "T05-2190" },
-      { session_id: "session-1003", table_id: "table-6", cashier_id: "user-1", waiter_id: "user-3", adult_count: 2, child_count: 0, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-23), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null, customer_code: "T06-6883" },
-      { session_id: "session-1004", table_id: "table-9", cashier_id: "user-1", waiter_id: "user-3", adult_count: 4, child_count: 0, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-72), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null, customer_code: "T09-9142" },
-      { session_id: "session-1005", table_id: "table-11", cashier_id: "user-1", waiter_id: "user-3", adult_count: 2, child_count: 2, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-45), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null, customer_code: "T11-3907" },
-      { session_id: "session-1006", table_id: "table-13", cashier_id: "user-1", waiter_id: "user-3", adult_count: 4, child_count: 0, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-68), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null, customer_code: "T13-7440" },
-      { session_id: "session-1007", table_id: "table-15", cashier_id: "user-1", waiter_id: "user-3", adult_count: 4, child_count: 0, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-94), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-3), customer_code: "T15-8019" },
-      { session_id: "session-1008", table_id: "table-4", cashier_id: "user-1", waiter_id: "user-3", adult_count: 2, child_count: 0, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-260), closed_at: minutesFromNow(-155), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-160), customer_code: "T04-1220" },
-      { session_id: "session-1009", table_id: "table-12", cashier_id: "user-1", waiter_id: "user-3", adult_count: 2, child_count: 2, adult_price: 399, child_price: 259, opened_at: minutesFromNow(-1380), closed_at: minutesFromNow(-1285), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-1290), customer_code: "T12-4301" }
+      { session_id: "session-1001", table_id: "02", cashier_id: "user-1", adult_count: 3, child_count: 1, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-60), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
+      { session_id: "session-1002", table_id: "05", cashier_id: "user-1", adult_count: 2, child_count: 1, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-105), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-5) },
+      { session_id: "session-1003", table_id: "06", cashier_id: "user-1", adult_count: 2, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-23), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
+      { session_id: "session-1004", table_id: "09", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-72), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
+      { session_id: "session-1005", table_id: "11", cashier_id: "user-1", adult_count: 2, child_count: 2, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-45), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
+      { session_id: "session-1006", table_id: "13", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-68), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
+      { session_id: "session-1007", table_id: "15", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-94), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-3) },
+      { session_id: "session-1008", table_id: "04", cashier_id: "user-1", adult_count: 2, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-260), closed_at: minutesFromNow(-155), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-160) },
+      { session_id: "session-1009", table_id: "12", cashier_id: "user-1", adult_count: 2, child_count: 2, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-1380), closed_at: minutesFromNow(-1285), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-1290) }
     ],
     orders: [
-      { order_id: "order-1001", session_id: "session-1001", ordered_at: minutesFromNow(-36), source: "customer", status: "open", note: "No spicy sauce" },
-      { order_id: "order-1002", session_id: "session-1001", ordered_at: minutesFromNow(-15), source: "customer", status: "open", note: "" },
-      { order_id: "order-1003", session_id: "session-1002", ordered_at: minutesFromNow(-240), source: "customer", status: "completed", note: "" },
-      { order_id: "order-1004", session_id: "session-1003", ordered_at: minutesFromNow(-1360), source: "customer", status: "completed", note: "" },
-      { order_id: "order-1005", session_id: "session-1003", ordered_at: minutesFromNow(-1342), source: "customer", status: "completed", note: "" }
+      { order_id: "order-1001", session_id: "session-1001", ordered_at: minutesFromNow(-36), status: "open" },
+      { order_id: "order-1002", session_id: "session-1001", ordered_at: minutesFromNow(-15), status: "open" },
+      { order_id: "order-1003", session_id: "session-1002", ordered_at: minutesFromNow(-240), status: "completed" },
+      { order_id: "order-1004", session_id: "session-1003", ordered_at: minutesFromNow(-1360), status: "completed" },
+      { order_id: "order-1005", session_id: "session-1003", ordered_at: minutesFromNow(-1342), status: "completed" }
     ],
     order_items: [
-      { order_item_id: "orderItem-1001", order_id: "order-1001", menu_id: "menu-1", quantity: 2, status: "cooking", special_instructions: "Thin slice, no spicy sauce", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-31), ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1002", order_id: "order-1001", menu_id: "menu-6", quantity: 1, status: "ready", special_instructions: "Extra fresh basket", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-32), ready_at: minutesFromNow(-27), out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1003", order_id: "order-1002", menu_id: "menu-3", quantity: 1, status: "pending", special_instructions: "Chef priority for premium add-on", priority_level: "rush", priority_reason: "RUSH ORDER - CHEF PRIORITY", expedited_at: minutesFromNow(-8), requested_at: minutesFromNow(-24), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1004", order_id: "order-1002", menu_id: "menu-5", quantity: 2, status: "pending", special_instructions: "Serve chilled", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-15), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1005", order_id: "order-1003", menu_id: "menu-1", quantity: 3, status: "served", special_instructions: "", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-235), ready_at: minutesFromNow(-230), out_for_serving_at: minutesFromNow(-228), served_at: minutesFromNow(-226), cancelled_at: null },
-      { order_item_id: "orderItem-1006", order_id: "order-1003", menu_id: "menu-8", quantity: 2, status: "served", special_instructions: "Less spicy", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-234), ready_at: minutesFromNow(-229), out_for_serving_at: minutesFromNow(-227), served_at: minutesFromNow(-225), cancelled_at: null },
-      { order_item_id: "orderItem-1007", order_id: "order-1004", menu_id: "menu-2", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1354), ready_at: minutesFromNow(-1348), out_for_serving_at: minutesFromNow(-1347), served_at: minutesFromNow(-1345), cancelled_at: null },
-      { order_item_id: "orderItem-1008", order_id: "order-1004", menu_id: "menu-4", quantity: 2, status: "served", special_instructions: "", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1355), ready_at: minutesFromNow(-1349), out_for_serving_at: minutesFromNow(-1348), served_at: minutesFromNow(-1346), cancelled_at: null },
-      { order_item_id: "orderItem-1009", order_id: "order-1005", menu_id: "menu-5", quantity: 3, status: "served", special_instructions: "Extra sauce", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1338), ready_at: minutesFromNow(-1332), out_for_serving_at: minutesFromNow(-1330), served_at: minutesFromNow(-1328), cancelled_at: null },
-      { order_item_id: "orderItem-1010", order_id: "order-1005", menu_id: "menu-9", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", priority_reason: "", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1339), ready_at: minutesFromNow(-1335), out_for_serving_at: minutesFromNow(-1333), served_at: minutesFromNow(-1331), cancelled_at: null }
+      { order_item_id: "orderItem-1001", order_id: "order-1001", menu_id: "menu-1", quantity: 2, status: "cooking", special_instructions: "Thin slice, no spicy sauce", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-31), ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
+      { order_item_id: "orderItem-1002", order_id: "order-1001", menu_id: "menu-6", quantity: 1, status: "ready", special_instructions: "Extra fresh basket", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-32), ready_at: minutesFromNow(-27), out_for_serving_at: null, served_at: null, cancelled_at: null },
+      { order_item_id: "orderItem-1003", order_id: "order-1002", menu_id: "menu-3", quantity: 1, status: "pending", special_instructions: "Chef priority for premium add-on", priority_level: "rush", expedited_at: minutesFromNow(-8), requested_at: minutesFromNow(-24), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
+      { order_item_id: "orderItem-1004", order_id: "order-1002", menu_id: "menu-5", quantity: 2, status: "pending", special_instructions: "Serve chilled", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-15), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
+      { order_item_id: "orderItem-1005", order_id: "order-1003", menu_id: "menu-1", quantity: 3, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-235), ready_at: minutesFromNow(-230), out_for_serving_at: minutesFromNow(-228), served_at: minutesFromNow(-226), cancelled_at: null },
+      { order_item_id: "orderItem-1006", order_id: "order-1003", menu_id: "menu-8", quantity: 2, status: "served", special_instructions: "Less spicy", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-234), ready_at: minutesFromNow(-229), out_for_serving_at: minutesFromNow(-227), served_at: minutesFromNow(-225), cancelled_at: null },
+      { order_item_id: "orderItem-1007", order_id: "order-1004", menu_id: "menu-2", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1354), ready_at: minutesFromNow(-1348), out_for_serving_at: minutesFromNow(-1347), served_at: minutesFromNow(-1345), cancelled_at: null },
+      { order_item_id: "orderItem-1008", order_id: "order-1004", menu_id: "menu-4", quantity: 2, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1355), ready_at: minutesFromNow(-1349), out_for_serving_at: minutesFromNow(-1348), served_at: minutesFromNow(-1346), cancelled_at: null },
+      { order_item_id: "orderItem-1009", order_id: "order-1005", menu_id: "menu-5", quantity: 3, status: "served", special_instructions: "Extra sauce", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1338), ready_at: minutesFromNow(-1332), out_for_serving_at: minutesFromNow(-1330), served_at: minutesFromNow(-1328), cancelled_at: null },
+      { order_item_id: "orderItem-1010", order_id: "order-1005", menu_id: "menu-9", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1339), ready_at: minutesFromNow(-1335), out_for_serving_at: minutesFromNow(-1333), served_at: minutesFromNow(-1331), cancelled_at: null }
     ],
     payments: [
       { payment_id: "payment-1", session_id: "session-1008", cashier_id: "user-1", method: "cash", paid_amount: 798, paid_at: minutesFromNow(-155), status: "paid" },
       { payment_id: "payment-2", session_id: "session-1009", cashier_id: "user-1", method: "cash", paid_amount: 2114, paid_at: minutesFromNow(-1285), status: "paid" }
     ],
-    staff_shifts: [
-      { shift_id: "shift-1", user_id: "user-1", role_snapshot: "cashier", station: "Front POS", clock_in_at: minutesFromNow(-300), clock_out_at: minutesFromNow(-150), login_at: minutesFromNow(-300), logout_at: minutesFromNow(-150), note: "Lunch cashier shift" },
-      { shift_id: "shift-2", user_id: "user-2", role_snapshot: "kitchen", station: "Kitchen pass", clock_in_at: minutesFromNow(-75), clock_out_at: null, login_at: minutesFromNow(-75), logout_at: null, note: "Dinner kitchen shift" },
-      { shift_id: "shift-3", user_id: "user-3", role_snapshot: "waiter", station: "Dining room", clock_in_at: minutesFromNow(-285), clock_out_at: minutesFromNow(-130), login_at: minutesFromNow(-285), logout_at: minutesFromNow(-130), note: "Lunch service shift" },
-      { shift_id: "shift-4", user_id: "user-4", role_snapshot: "manager", station: "Management office", clock_in_at: minutesFromNow(-90), clock_out_at: null, login_at: minutesFromNow(-90), logout_at: null, note: "Manager review shift" }
-    ],
     staff_activity_logs: [
-      { activity_id: "activity-1", user_id: "user-1", shift_id: "shift-1", action: "open_table", entity_type: "dining_session", entity_id: "session-1008", occurred_at: minutesFromNow(-260), note: "Opened table 04" },
-      { activity_id: "activity-2", user_id: "user-1", shift_id: "shift-1", action: "checkout_paid", entity_type: "payment", entity_id: "payment-1", occurred_at: minutesFromNow(-155), note: "Closed table 04 cash payment" },
-      { activity_id: "activity-3", user_id: "user-3", shift_id: "shift-3", action: "serve_item", entity_type: "order_item", entity_id: "orderItem-1005", occurred_at: minutesFromNow(-226), note: "Served Marinated Pork Belly" },
-      { activity_id: "activity-4", user_id: "user-2", shift_id: "shift-2", action: "start_preparing", entity_type: "order_item", entity_id: "orderItem-1001", occurred_at: minutesFromNow(-31), note: "Started kitchen preparation" },
-      { activity_id: "activity-5", user_id: "user-2", shift_id: "shift-2", action: "expedite_order", entity_type: "order_item", entity_id: "orderItem-1003", occurred_at: minutesFromNow(-8), note: "Marked rush chef priority" }
+      { activity_id: "activity-1", user_id: "user-1", action: "open_table", entity_type: "dining_session", entity_id: "session-1008", occurred_at: minutesFromNow(-260) },
+      { activity_id: "activity-2", user_id: "user-1", action: "checkout_paid", entity_type: "payment", entity_id: "payment-1", occurred_at: minutesFromNow(-155) },
+      { activity_id: "activity-3", user_id: "user-3", action: "serve_item", entity_type: "order_item", entity_id: "orderItem-1005", occurred_at: minutesFromNow(-226) },
+      { activity_id: "activity-4", user_id: "user-2", action: "start_preparing", entity_type: "order_item", entity_id: "orderItem-1001", occurred_at: minutesFromNow(-31) },
+      { activity_id: "activity-5", user_id: "user-2", action: "expedite_order", entity_type: "order_item", entity_id: "orderItem-1003", occurred_at: minutesFromNow(-8) }
     ],
     inventory_transactions: [
-      { transaction_id: "transaction-1", ingredient_id: "ingredient-1", order_item_id: "orderItem-1005", staff_id: "user-3", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.18, occurred_at: minutesFromNow(-226), note: "Served Marinated Pork Belly" },
-      { transaction_id: "transaction-2", ingredient_id: "ingredient-8", order_item_id: "orderItem-1006", staff_id: "user-3", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.08, occurred_at: minutesFromNow(-225), note: "Served kimchi fried rice" },
-      { transaction_id: "transaction-3", ingredient_id: "ingredient-2", order_item_id: "orderItem-1007", staff_id: "user-3", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.24, occurred_at: minutesFromNow(-1345), note: "Served smoked bacon roll" },
-      { transaction_id: "transaction-4", ingredient_id: "ingredient-4", order_item_id: "orderItem-1008", staff_id: "user-3", transaction_type: "usage", quantity_change: -240, unit_cost_snapshot: 0.31, occurred_at: minutesFromNow(-1346), note: "Served fresh squid" },
-      { transaction_id: "transaction-5", ingredient_id: "ingredient-5", order_item_id: "orderItem-1009", staff_id: "user-3", transaction_type: "usage", quantity_change: -18, unit_cost_snapshot: 5.2, occurred_at: minutesFromNow(-1328), note: "Served white shrimp" },
-      { transaction_id: "transaction-6", ingredient_id: "ingredient-9", order_item_id: "orderItem-1010", staff_id: "user-3", transaction_type: "usage", quantity_change: -320, unit_cost_snapshot: 0.09, occurred_at: minutesFromNow(-1331), note: "Served Thai iced tea" }
+      { transaction_id: "transaction-1", ingredient_id: "ingredient-1", order_item_id: "orderItem-1005", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.18, occurred_at: minutesFromNow(-226) },
+      { transaction_id: "transaction-2", ingredient_id: "ingredient-8", order_item_id: "orderItem-1006", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.08, occurred_at: minutesFromNow(-225) },
+      { transaction_id: "transaction-3", ingredient_id: "ingredient-2", order_item_id: "orderItem-1007", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.24, occurred_at: minutesFromNow(-1345) },
+      { transaction_id: "transaction-4", ingredient_id: "ingredient-4", order_item_id: "orderItem-1008", transaction_type: "usage", quantity_change: -240, unit_cost_snapshot: 0.31, occurred_at: minutesFromNow(-1346) },
+      { transaction_id: "transaction-5", ingredient_id: "ingredient-5", order_item_id: "orderItem-1009", transaction_type: "usage", quantity_change: -18, unit_cost_snapshot: 5.2, occurred_at: minutesFromNow(-1328) },
+      { transaction_id: "transaction-6", ingredient_id: "ingredient-9", order_item_id: "orderItem-1010", transaction_type: "usage", quantity_change: -320, unit_cost_snapshot: 0.09, occurred_at: minutesFromNow(-1331) }
     ]
   };
 }
@@ -370,9 +353,7 @@ function average(values) {
 export default function Home() {
   const [db, setDb] = useState(null);
   const [userId, setUserId] = useState(null);
-  const [shiftId, setShiftId] = useState(null);
   const [view, setView] = useState("login");
-  const [clockInEnabled, setClockInEnabled] = useState(true);
   const [customerSessionId, setCustomerSessionId] = useState("");
   const [selectedCashierTableId, setSelectedCashierTableId] = useState("table-1");
   const [checkInAdults, setCheckInAdults] = useState(4);
@@ -475,8 +456,6 @@ export default function Home() {
 
   // Current user controls whether the app displays login, customer mode, or staff workspace.
   const currentUser = db && userId ? db.users.find((user) => user.user_id === userId) : null;
-  const currentShift = currentUser ? activeShiftForUser(currentUser.user_id) : null;
-
   // Cleaning is an automatic ten-minute state; no cashier button is needed.
   useEffect(() => {
     if (!db) return;
@@ -493,17 +472,15 @@ export default function Home() {
         nextDb.staff_activity_logs.push({
           activity_id: nextId(nextDb, "activity"),
           user_id: currentUser.user_id,
-          shift_id: shiftId || null,
           action: "auto_table_ready",
           entity_type: "restaurant_table",
           entity_id: nextTable.table_id,
-          occurred_at: new Date().toISOString(),
-          note: `Table ${nextTable.table_code} finished 10-minute cleaning timer`
+          occurred_at: new Date().toISOString()
         });
       }
     });
     commit(nextDb, "");
-  }, [clockNow, db, currentUser, shiftId]);
+  }, [clockNow, db, currentUser]);
 
   if (databaseError) {
     const blockedByRls = databaseError.toLowerCase().includes("row-level security");
@@ -530,12 +507,14 @@ export default function Home() {
 
   // The prototype shows a compact loading state until Supabase returns data.
   if (!db || !helpers) {
-    return <main className="app-shell"><p className="empty">Loading The Nocturnal Epicurean...</p></main>;
+    return <main className="app-shell"><p className="empty">Loading Yum Yum Buffet...</p></main>;
   }
 
   // Session totals use stored price snapshots so old payments remain accurate.
   function sessionTotal(session) {
-    return session.adult_count * session.adult_price + session.child_count * session.child_price;
+    const adultPrice = session.adult_price_snapshot ?? ADULT_BUFFET_PRICE;
+    const childPrice = session.child_price_snapshot ?? CHILD_BUFFET_PRICE;
+    return session.adult_count * adultPrice + session.child_count * childPrice;
   }
 
   // Guest count is reused by cashier and dashboard screens.
@@ -573,34 +552,17 @@ export default function Home() {
     return sourceDb.order_items.filter((item) => orderIds.includes(item.order_id));
   }
 
-  // The active shift links staff actions back to clock-in time and station.
-  function activeShiftForUser(targetUserId, sourceDb = db) {
-    if (!targetUserId) return null;
-    return (sourceDb.staff_shifts || [])
-      .filter((shift) => shift.user_id === targetUserId && !shift.clock_out_at)
-      .sort((a, b) => new Date(b.clock_in_at) - new Date(a.clock_in_at))[0] || null;
-  }
-
-  // Shift length supports the manager dashboard and staff audit table.
-  function shiftMinutes(shift) {
-    if (!shift) return 0;
-    return minutesBetween(shift.clock_in_at, shift.clock_out_at || new Date().toISOString()) || 0;
-  }
-
-  // Staff action logs answer "who did this, during which shift, and when?"
-  function recordStaffActivity(nextDb, action, entityType, entityId, note = "") {
+  // Staff action logs answer who performed an operation and when.
+  function recordStaffActivity(nextDb, action, entityType, entityId) {
     if (!currentUser) return;
     nextDb.staff_activity_logs ||= [];
-    const activeShift = activeShiftForUser(currentUser.user_id, nextDb);
     nextDb.staff_activity_logs.push({
       activity_id: nextId(nextDb, "activity"),
       user_id: currentUser.user_id,
-      shift_id: activeShift?.shift_id || shiftId || null,
       action,
       entity_type: entityType,
       entity_id: entityId,
-      occurred_at: new Date().toISOString(),
-      note
+      occurred_at: new Date().toISOString()
     });
   }
 
@@ -682,12 +644,10 @@ export default function Home() {
           transaction_id: nextId(nextDb, "transaction"),
           ingredient_id: ingredient.ingredient_id,
           order_item_id: item.order_item_id,
-          staff_id: currentUser?.user_id || "user-3",
           transaction_type: "usage",
           quantity_change: -usedQuantity,
           unit_cost_snapshot: ingredient.unit_cost,
-          occurred_at: new Date().toISOString(),
-          note: `Served ${nextDb.menu_items.find((menu) => menu.menu_id === item.menu_id)?.name || item.menu_id}`
+          occurred_at: new Date().toISOString()
         });
       });
       item.status = "served";
@@ -728,80 +688,42 @@ export default function Home() {
       setNotice({ message: "Invalid or inactive staff login.", type: "error" });
       return;
     }
-    const wantsClockIn = form.clock_in === "on";
     const nextDb = structuredClone(db);
     const now = new Date().toISOString();
-    (nextDb.staff_shifts || [])
-      .filter((shift) => shift.user_id === user.user_id && !shift.clock_out_at)
-      .forEach((shift) => {
-        shift.clock_out_at = now;
-        shift.logout_at = now;
-        shift.note = shift.note ? `${shift.note}; auto-closed by new login` : "Auto-closed by new login";
-      });
-    let newShiftId = null;
-    if (wantsClockIn) {
-      newShiftId = nextId(nextDb, "shift");
-      nextDb.staff_shifts ||= [];
-      nextDb.staff_shifts.push({
-        shift_id: newShiftId,
-        user_id: user.user_id,
-        role_snapshot: user.role,
-        station: STATION_BY_ROLE[user.role] || "Unassigned station",
-        clock_in_at: now,
-        clock_out_at: null,
-        login_at: now,
-        logout_at: null,
-        note: "Clocked in from staff portal"
-      });
-    }
     nextDb.staff_activity_logs ||= [];
     nextDb.staff_activity_logs.push({
       activity_id: nextId(nextDb, "activity"),
       user_id: user.user_id,
-      shift_id: newShiftId,
-      action: wantsClockIn ? "login_clock_in" : "login_without_clock_in",
-      entity_type: wantsClockIn ? "staff_shift" : "app_user",
-      entity_id: wantsClockIn ? newShiftId : user.user_id,
-      occurred_at: now,
-      note: `${user.role} authenticated at ${STATION_BY_ROLE[user.role] || "Unassigned station"}`
+      action: "login",
+      entity_type: "app_user",
+      entity_id: user.user_id,
+      occurred_at: now
     });
-    commit(nextDb, wantsClockIn ? `Logged in as ${user.role}; shift clocked in.` : `Logged in as ${user.role}; shift was not clocked in.`);
+    commit(nextDb, `Logged in as ${user.role}.`);
     setUserId(user.user_id);
-    setShiftId(newShiftId);
     setView(DEFAULT_VIEW_BY_ROLE[user.role]);
   }
 
-  // Logout closes the active shift so worked minutes can be reported.
+  // Logout returns staff to the login portal and records the event.
   function handleLogout() {
     if (!currentUser) {
       setUserId(null);
-      setShiftId(null);
       setView("login");
       return;
     }
     const nextDb = structuredClone(db);
     const now = new Date().toISOString();
-    const activeShift = shiftId
-      ? nextDb.staff_shifts.find((shift) => shift.shift_id === shiftId)
-      : activeShiftForUser(currentUser.user_id, nextDb);
-    if (activeShift && !activeShift.clock_out_at) {
-      activeShift.clock_out_at = now;
-      activeShift.logout_at = now;
-    }
     nextDb.staff_activity_logs ||= [];
     nextDb.staff_activity_logs.push({
       activity_id: nextId(nextDb, "activity"),
       user_id: currentUser.user_id,
-      shift_id: activeShift?.shift_id || shiftId || null,
-      action: "logout_clock_out",
-      entity_type: "staff_shift",
-      entity_id: activeShift?.shift_id || shiftId || "",
-      occurred_at: now,
-      note: "Staff logged out and shift was closed"
+      action: "logout",
+      entity_type: "app_user",
+      entity_id: currentUser.user_id,
+      occurred_at: now
     });
-    commit(nextDb, "Logged out and shift clocked out.");
+    commit(nextDb, "Logged out.");
     setUserId(null);
-    setShiftId(null);
     setView("login");
   }
 
@@ -829,57 +751,19 @@ export default function Home() {
     }
 
     const nextDb = structuredClone(db);
-    const targetUserInNextDb = nextDb.users.find((user) => user.user_id === targetUser.user_id);
     const now = new Date().toISOString();
-    const activeCurrentShift = currentUser
-      ? (shiftId
-          ? nextDb.staff_shifts.find((shift) => shift.shift_id === shiftId)
-          : activeShiftForUser(currentUser.user_id, nextDb))
-      : null;
-
-    if (activeCurrentShift && !activeCurrentShift.clock_out_at && activeCurrentShift.user_id !== targetUser.user_id) {
-      activeCurrentShift.clock_out_at = now;
-      activeCurrentShift.logout_at = now;
-      activeCurrentShift.note = activeCurrentShift.note ? `${activeCurrentShift.note}; closed by role test switch` : "Closed by role test switch";
-    }
-
-    (nextDb.staff_shifts || [])
-      .filter((shift) => shift.user_id === targetUser.user_id && !shift.clock_out_at)
-      .forEach((shift) => {
-        shift.clock_out_at = now;
-        shift.logout_at = now;
-        shift.note = shift.note ? `${shift.note}; refreshed by role test login` : "Refreshed by role test login";
-      });
-
-    const targetShift = {
-      shift_id: nextId(nextDb, "shift"),
-      user_id: targetUser.user_id,
-      role_snapshot: targetUser.role,
-      station: STATION_BY_ROLE[targetUser.role] || "Demo station",
-      clock_in_at: now,
-      clock_out_at: null,
-      login_at: now,
-      logout_at: null,
-      note: `Role test login using ${screen.username} / ${screen.password}`
-    };
-    nextDb.staff_shifts ||= [];
-    nextDb.staff_shifts.push(targetShift);
-
     nextDb.staff_activity_logs ||= [];
     nextDb.staff_activity_logs.push({
       activity_id: nextId(nextDb, "activity"),
       user_id: targetUser.user_id,
-      shift_id: targetShift.shift_id,
       action: "role_test_login",
       entity_type: "app_user",
       entity_id: targetUser.user_id,
-      occurred_at: now,
-      note: `Professor role test logged in as ${screen.username} / ${screen.password}`
+      occurred_at: now
     });
 
     commit(nextDb, `Logged in as ${screen.label} via role test bar.`);
-    setUserId(targetUserInNextDb?.user_id || targetUser.user_id);
-    setShiftId(targetShift.shift_id);
+    setUserId(targetUser.user_id);
     setView(screen.view);
   }
 
@@ -895,28 +779,25 @@ export default function Home() {
       if (adultCount + childCount <= 0) throw new Error("A session needs at least one guest.");
       if (adultCount + childCount > table.capacity) throw new Error(`Table capacity is ${table.capacity} guests.`);
       const sessionId = nextId(nextDb, "session");
-      const customerCode = `${table.table_code}-${Math.floor(1000 + Math.random() * 9000)}`;
       nextDb.dining_sessions.push({
         session_id: sessionId,
         table_id: table.table_id,
         cashier_id: currentUser.user_id,
-        waiter_id: form.waiter_id,
         adult_count: adultCount,
         child_count: childCount,
-        adult_price: Number(form.adult_price || 0),
-        child_price: Number(form.child_price || 0),
+        adult_price_snapshot: Number(form.adult_price_snapshot || 0),
+        child_price_snapshot: Number(form.child_price_snapshot || 0),
         opened_at: new Date().toISOString(),
         closed_at: null,
         status: "open",
         payment_status: "unpaid",
-        bill_requested_at: null,
-        customer_code: customerCode
+        bill_requested_at: null
       });
       table.status = "occupied";
       table.cleaning_started_at = null;
       recordStaffActivity(nextDb, "open_table", "dining_session", sessionId, `Opened table ${table.table_code}`);
       setCustomerSessionId(sessionId);
-    }, "Table opened and customer code generated.");
+    }, "Table opened.");
   }
 
   // The Figma cashier panel opens a ready table from the right-side guest counters.
@@ -932,22 +813,19 @@ export default function Home() {
       if (checkInAdults + checkInChildren <= 0) throw new Error("A session needs at least one guest.");
       if (checkInAdults + checkInChildren > nextTable.capacity) throw new Error(`Table capacity is ${nextTable.capacity} guests.`);
       const sessionId = nextId(nextDb, "session");
-      const customerCode = `T${nextTable.table_code}-${Math.floor(1000 + Math.random() * 9000)}`;
       nextDb.dining_sessions.push({
         session_id: sessionId,
         table_id: nextTable.table_id,
         cashier_id: currentUser.user_id,
-        waiter_id: nextDb.users.find((user) => user.role === "waiter" && user.is_active && !user.deleted_at)?.user_id || null,
         adult_count: checkInAdults,
         child_count: checkInChildren,
-        adult_price: ADULT_BUFFET_PRICE,
-        child_price: CHILD_BUFFET_PRICE,
+        adult_price_snapshot: ADULT_BUFFET_PRICE,
+        child_price_snapshot: CHILD_BUFFET_PRICE,
         opened_at: new Date().toISOString(),
         closed_at: null,
         status: "open",
         payment_status: "unpaid",
-        bill_requested_at: null,
-        customer_code: customerCode
+        bill_requested_at: null
       });
       nextTable.status = "occupied";
       nextTable.cleaning_started_at = null;
@@ -995,7 +873,7 @@ export default function Home() {
       const session = nextDb.dining_sessions.find((row) => row.session_id === customerSessionId);
       if (!session || session.status !== "open") throw new Error("This dining session is not open.");
       const orderId = nextId(nextDb, "order");
-      nextDb.orders.push({ order_id: orderId, session_id: session.session_id, ordered_at: new Date().toISOString(), source: "customer", status: "open", note: "" });
+      nextDb.orders.push({ order_id: orderId, session_id: session.session_id, ordered_at: new Date().toISOString(), status: "open" });
       entries.forEach(([menuId, quantity]) => {
         nextDb.order_items.push({
           order_item_id: nextId(nextDb, "orderItem"),
@@ -1005,7 +883,6 @@ export default function Home() {
           status: "pending",
           special_instructions: "",
           priority_level: "normal",
-          priority_reason: "",
           expedited_at: null,
           requested_at: new Date().toISOString(),
           cooking_at: null,
@@ -1046,13 +923,11 @@ export default function Home() {
       nextDb.staff_activity_logs ||= [];
       nextDb.staff_activity_logs.push({
         activity_id: nextId(nextDb, "activity"),
-        user_id: session.waiter_id || session.cashier_id || defaultAuditUser?.user_id,
-        shift_id: null,
+        user_id: session.cashier_id || defaultAuditUser?.user_id,
         action: "customer_call_server",
         entity_type: "dining_session",
         entity_id: session.session_id,
-        occurred_at: new Date().toISOString(),
-        note: `Table ${table?.table_code || session.table_id} requested staff assistance from the iPad menu`
+        occurred_at: new Date().toISOString()
       });
     }, "Server has been notified.");
   }
@@ -1076,7 +951,6 @@ export default function Home() {
       const item = nextDb.order_items.find((row) => row.order_item_id === orderItemId);
       if (!item) throw new Error("Order item not found.");
       item.priority_level = "rush";
-      item.priority_reason = "RUSH ORDER - CHEF PRIORITY";
       item.expedited_at = new Date().toISOString();
       recordStaffActivity(nextDb, "expedite_order", "order_item", item.order_item_id, "Marked rush chef priority");
     }, "Order item marked as rush priority.");
@@ -1132,9 +1006,6 @@ export default function Home() {
         name: form.name,
         description: form.description || "",
         image_url: form.image_url || "",
-        kitchen_station: form.kitchen_station || "general",
-        prep_time_minutes: Number(form.prep_time_minutes || 5),
-        price: Number(form.price || 0),
         is_available: true,
         deleted_at: null
       });
@@ -1211,12 +1082,10 @@ export default function Home() {
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
         order_item_id: null,
-        staff_id: currentUser.user_id,
-        transaction_type: delta >= 0 ? "adjustment" : "waste",
+        transaction_type: "manual_adjustment",
         quantity_change: delta,
         unit_cost_snapshot: ingredient.unit_cost,
-        occurred_at: new Date().toISOString(),
-        note: "Quick stock adjustment from inventory screen"
+        occurred_at: new Date().toISOString()
       });
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
       recordStaffActivity(nextDb, "quick_stock_adjustment", "inventory_item", ingredient.ingredient_id, `${delta >= 0 ? "+" : ""}${delta} ${ingredient.unit}`);
@@ -1247,22 +1116,20 @@ export default function Home() {
     mutate((nextDb) => {
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === form.ingredient_id);
       const quantity = Number(form.quantity || 0);
-      const signedQuantity = form.transaction_type === "waste" ? -quantity : quantity;
+      const signedQuantity = form.direction === "decrease" ? -quantity : quantity;
       if (ingredient.quantity_on_hand + signedQuantity < 0) throw new Error("Stock movement would make inventory negative.");
       ingredient.quantity_on_hand = Number((ingredient.quantity_on_hand + signedQuantity).toFixed(2));
       nextDb.inventory_transactions.push({
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
         order_item_id: null,
-        staff_id: currentUser.user_id,
-        transaction_type: form.transaction_type,
+        transaction_type: "manual_adjustment",
         quantity_change: signedQuantity,
         unit_cost_snapshot: ingredient.unit_cost,
-        occurred_at: new Date().toISOString(),
-        note: form.note || ""
+        occurred_at: new Date().toISOString()
       });
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
-      recordStaffActivity(nextDb, "record_stock_movement", "inventory_item", ingredient.ingredient_id, `${form.transaction_type} ${signedQuantity} ${ingredient.unit}`);
+      recordStaffActivity(nextDb, "record_stock_movement", "inventory_item", ingredient.ingredient_id, `${signedQuantity} ${ingredient.unit}`);
     }, "Stock movement recorded.");
     event.currentTarget.reset();
   }
@@ -1318,7 +1185,6 @@ export default function Home() {
     const nextDb = createSeedDatabase();
     commit(nextDb, "Demo data reset.", "success", { replaceSupabase: true });
     setCart({});
-    setShiftId(null);
     setCustomerSessionId(nextDb.dining_sessions.find((session) => session.status === "open")?.session_id || "");
     setSelectedCashierTableId(nextDb.restaurant_tables.find((table) => table.table_code === "01")?.table_id || nextDb.restaurant_tables[0]?.table_id || "");
     setCheckInAdults(4);
@@ -1354,10 +1220,9 @@ export default function Home() {
       if (hourFilter === "dinner") return hour >= 17 && hour <= 23;
       return true;
     };
-    const tables = db.restaurant_tables.filter((table) => !table.deleted_at);
+    const tables = db.restaurant_tables;
     const rangePayments = db.payments.filter((payment) => payment.status === "paid" && inRange(payment.paid_at));
     const rangeSessions = db.dining_sessions.filter((session) => inRange(session.opened_at));
-    const rangeShifts = (db.staff_shifts || []).filter((shift) => inRange(shift.clock_in_at));
     const rangeUsage = db.inventory_transactions.filter((txn) => txn.transaction_type === "usage" && inRange(txn.occurred_at));
     const rangeOrderItems = db.order_items.filter((item) => item.status !== "cancelled" && inRange(item.requested_at));
     const servedItems = db.order_items.filter((item) => item.status === "served" && inRange(item.served_at || item.requested_at));
@@ -1450,8 +1315,7 @@ export default function Home() {
 	      avgServiceMinutes: average(serviceMinutes),
 	      avgDiningMinutes: average(diningMinutes),
 	      servedItemCount: servedItems.reduce((sum, item) => sum + item.quantity, 0),
-      activeShifts: (db.staff_shifts || []).filter((shift) => !shift.clock_out_at).length,
-      workedHoursToday: rangeShifts.reduce((sum, shift) => sum + shiftMinutes(shift), 0) / 60,
+      activeStaff: db.users.filter((user) => user.is_active && !user.deleted_at).length,
       peakHour: peakRows.length ? peakRows.map((row) => `${String(row.hour).padStart(2, "0")}:00`).join(", ") : "-",
       peakGuests: maxTrafficGuests,
       traffic: traffic.map((row) => ({
@@ -1691,7 +1555,7 @@ export default function Home() {
           />
           <div className="absolute inset-x-0 top-[44%] z-10 flex flex-col items-center gap-4 px-12 text-center">
             <p className="w-[286px] whitespace-normal text-center font-epilogue text-[28px] font-extrabold uppercase leading-8 tracking-[0.1em] text-[#F8DCDA]">
-              THE NOCTURNAL EPICUREAN
+              YUM YUM BUFFET
             </p>
             <div className="h-px w-16 bg-[#FFB3AF] opacity-60" />
             <p className="w-fit font-manrope text-sm font-light leading-5 tracking-[0.2em] text-[#E2BEBB]">
@@ -1754,24 +1618,6 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="figma-clock-row flex w-full flex-row items-center gap-3">
-                {clockInEnabled ? <input name="clock_in" type="hidden" value="on" /> : null}
-                <button
-                  aria-checked={clockInEnabled}
-                  aria-label="Clock in for current shift"
-                  className="figma-clock-switch"
-                  role="switch"
-                  data-on={clockInEnabled}
-                  type="button"
-                  onClick={() => setClockInEnabled((enabled) => !enabled)}
-                >
-                  <span className="figma-clock-knob" />
-                </button>
-                <span className="figma-clock-label w-fit font-manrope text-xs leading-5 tracking-[0.1em] text-[#E2BEBB]">
-                  CLOCK IN FOR CURRENT SHIFT
-                </span>
-              </div>
-
               <button className="figma-auth-button relative flex w-full cursor-pointer items-center justify-center rounded-lg bg-[#960018] px-0 py-6 font-manrope text-base font-extrabold leading-5 tracking-[0.175em] text-[#F8DCDA] shadow-[0_10px_15px_-3px_rgba(0,0,0,0.20),0_4px_6px_-4px_rgba(0,0,0,0.20)]" type="submit">
                 AUTHENTICATE & ENTER
               </button>
@@ -1798,7 +1644,7 @@ export default function Home() {
   }
 
   function renderCashierTableManagement() {
-    const tables = db.restaurant_tables.filter((table) => !table.deleted_at).slice().sort((a, b) => Number(a.table_code) - Number(b.table_code));
+    const tables = db.restaurant_tables.slice().sort((a, b) => Number(a.table_code) - Number(b.table_code));
     const selectedTable = helpers.tableById(selectedCashierTableId) || tables[0];
     const activeSessions = db.dining_sessions.filter((session) => session.status === "open");
     const totalGuests = activeSessions.reduce((sum, session) => sum + sessionGuests(session), 0);
@@ -1832,7 +1678,7 @@ export default function Home() {
 
         <header className="cashier-topbar">
           <div>
-            <h1>THE NOCTURNAL EPICUREAN</h1>
+            <h1>YUM YUM BUFFET</h1>
             <p>TABLE MANAGEMENT SYSTEM</p>
           </div>
           <div className="cashier-stats">
@@ -2033,8 +1879,8 @@ export default function Home() {
         </div>
         <div className="cashier-side-body payment">
           <p className="cashier-section-label">ORDER SUMMARY</p>
-          {renderPaymentLine("Adult Buffet", session.adult_count, session.adult_price)}
-          {renderPaymentLine("Child Buffet", session.child_count, session.child_price)}
+          {renderPaymentLine("Adult Buffet", session.adult_count, session.adult_price_snapshot ?? ADULT_BUFFET_PRICE)}
+          {renderPaymentLine("Child Buffet", session.child_count, session.child_price_snapshot ?? CHILD_BUFFET_PRICE)}
           <div className="cashier-total-breakdown">
             <div><span>SUBTOTAL</span><span>{total.toLocaleString()} THB</span></div>
             <div><span>SERVICE CHARGE (0%)</span><span>0 THB</span></div>
@@ -2087,7 +1933,7 @@ export default function Home() {
       <main className="workspace">
         <aside className="sidebar">
           <div className="brand-block">
-            <span className="eyebrow">The Nocturnal Epicurean</span>
+            <span className="eyebrow">Yum Yum Buffet</span>
             <strong>{currentUser.full_name}</strong>
             <span className="pill available">{currentUser.role}</span>
             {currentShift ? <span className="meta">Clocked in {shortDateTime(currentShift.clock_in_at)} - {currentShift.station}</span> : null}
@@ -2152,26 +1998,24 @@ export default function Home() {
   }
 
   function renderCashierOpen() {
-    const availableTables = db.restaurant_tables.filter((table) => !table.deleted_at && table.status === "available");
-    const waiters = db.users.filter((user) => user.role === "waiter" && user.is_active && !user.deleted_at);
+    const availableTables = db.restaurant_tables.filter((table) => table.status === "available");
     return (
       <div className="grid split">
         <form className="panel form-grid two" onSubmit={(event) => safe(() => handleOpenTable(event))}>
           <h2>New dining session</h2>
-          <label>Table<select name="table_id" required>{availableTables.map((table) => <option key={table.table_id} value={table.table_id}>{table.table_code} - {table.zone} ({table.capacity} seats)</option>)}</select></label>
-          <label>Assigned waiter<select name="waiter_id" required>{waiters.map((user) => <option key={user.user_id} value={user.user_id}>{user.full_name}</option>)}</select></label>
+          <label>Table<select name="table_id" required>{availableTables.map((table) => <option key={table.table_id} value={table.table_id}>Table {table.table_code} ({table.capacity} seats)</option>)}</select></label>
           <label>Adult guests<input name="adult_count" type="number" min="0" defaultValue="2" required /></label>
           <label>Child guests<input name="child_count" type="number" min="0" defaultValue="0" required /></label>
-          <label>Adult buffet price<input name="adult_price" type="number" min="0" defaultValue="399" required /></label>
-          <label>Child buffet price<input name="child_price" type="number" min="0" defaultValue="259" required /></label>
+          <label>Adult price snapshot<input name="adult_price_snapshot" type="number" min="0" defaultValue="399" required /></label>
+          <label>Child price snapshot<input name="child_price_snapshot" type="number" min="0" defaultValue="259" required /></label>
           <button type="submit">Open table</button>
         </form>
         <section className="panel">
           <h2>Table status</h2>
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Table</th><th>Zone</th><th>Seats</th><th>Status</th></tr></thead>
-              <tbody>{db.restaurant_tables.filter((table) => !table.deleted_at).map((table) => <tr key={table.table_id}><td>{table.table_code}</td><td>{table.zone}</td><td>{table.capacity}</td><td><span className={`pill ${table.status}`}>{table.status}</span></td></tr>)}</tbody>
+              <thead><tr><th>Table</th><th>Seats</th><th>Status</th></tr></thead>
+              <tbody>{db.restaurant_tables.map((table) => <tr key={table.table_id}><td>{table.table_code}</td><td>{table.capacity}</td><td><span className={`pill ${table.status}`}>{table.status}</span></td></tr>)}</tbody>
             </table>
           </div>
         </section>
@@ -2191,7 +2035,7 @@ export default function Home() {
     return (
       <section className="panel" key={session.session_id}>
         <div className="content-header">
-          <div><h2>Table {table?.table_code || session.table_id} - {session.customer_code}</h2><p className="meta">{sessionGuests(session)} guests, opened {shortDateTime(session.opened_at)}</p></div>
+          <div><h2>Table {table?.table_code || session.table_id}</h2><p className="meta">{sessionGuests(session)} guests, opened {shortDateTime(session.opened_at)}</p></div>
           <div className="actions"><span className="pill open">open</span><strong>{money(sessionTotal(session))}</strong></div>
         </div>
         <div className="table-wrap">
@@ -2233,7 +2077,7 @@ export default function Home() {
               </select>
             ) : "NO TABLE"}
           </div>
-          <h1>THE NOCTURNAL EPICUREAN</h1>
+          <h1>YUM YUM BUFFET</h1>
           <p>{remainingMinutes} MINS REMAINING</p>
         </header>
         <div className="customer-menu-shell">
@@ -2286,10 +2130,10 @@ export default function Home() {
   function renderCustomerMenuCard(item) {
     return (
       <article className="customer-food-card" key={item.menu_id}>
-        {renderCustomerFoodVisual(item)}
+          {renderCustomerFoodVisual(item)}
         <div className="customer-food-card-body">
           <h3>{item.displayName}</h3>
-          <p>{item.price ? `${money(item.price)} add-on` : "Included in buffet"}</p>
+          <p>Included in buffet</p>
           <button type="button" onClick={() => updateCartQuantity(item.menu_id, 1)}>+ ADD</button>
         </div>
       </article>
@@ -2362,7 +2206,7 @@ export default function Home() {
     return (
       <main className="customer-ipad customer-history-screen">
         <header className="customer-history-topbar">
-          <h1>THE NOCTURNAL EPICUREAN</h1>
+          <h1>YUM YUM BUFFET</h1>
           <div className="customer-history-session-chip">
             <span>TABLE {table?.table_code || "--"}</span>
             <span>{remainingMinutes} MINS REMAINING</span>
@@ -2631,7 +2475,7 @@ export default function Home() {
                   <div className="flex w-full flex-col items-start gap-1.5">
                     <p className="w-full font-epilogue text-xl uppercase leading-7 tracking-normal text-[#F8DCDA]">{menu?.name || item.menu_id}</p>
                     {detail ? <p className="w-full font-manrope text-sm leading-5 text-[#FFF]">{detail}</p> : null}
-                    {item.priority_reason ? <p className="w-full font-epilogue text-[11px] uppercase leading-[16.8px] tracking-[0.1em] text-[#FFB4AB]">{item.priority_reason}</p> : null}
+                    {item.priority_level === "rush" ? <p className="w-full font-epilogue text-[11px] uppercase leading-[16.8px] tracking-[0.1em] text-[#FFB4AB]">EXPEDITE NOW - CHEF PRIORITY</p> : null}
                   </div>
                 </div>
               );
@@ -2677,7 +2521,6 @@ export default function Home() {
         if (action === "expedite" && item.status === "pending") {
           item.status = "ready";
           item.priority_level = "rush";
-          item.priority_reason = "RUSH ORDER - CHEF PRIORITY";
           item.expedited_at = now;
           item.ready_at = now;
           changed = true;
@@ -2903,12 +2746,10 @@ export default function Home() {
             transaction_id: nextId(nextDb, "transaction"),
             ingredient_id: ingredient.ingredient_id,
             order_item_id: item.order_item_id,
-            staff_id: currentUser?.user_id || "user-3",
             transaction_type: "usage",
             quantity_change: -usedQuantity,
             unit_cost_snapshot: ingredient.unit_cost,
-            occurred_at: now,
-            note: `Served ${nextDb.menu_items.find((menu) => menu.menu_id === item.menu_id)?.name || item.menu_id}`
+            occurred_at: now
           });
         });
         item.status = "served";
@@ -2921,7 +2762,7 @@ export default function Home() {
 
   function renderManagerDashboard() {
     const metrics = calculateDashboardMetrics();
-    const tables = db.restaurant_tables.filter((table) => !table.deleted_at);
+    const tables = db.restaurant_tables;
     const diningTargetDetail = metrics.avgDiningMinutes && metrics.avgDiningMinutes > DINING_LIMIT_MINUTES
       ? `${metrics.avgDiningMinutes - DINING_LIMIT_MINUTES} mins above target`
       : `Within ${DINING_LIMIT_MINUTES} min target`;
@@ -2933,8 +2774,8 @@ export default function Home() {
       <main className="min-h-screen w-full bg-[#170B0B] pl-64 font-manrope text-[#F7DCDC]">
         <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col border-r border-[#594040] bg-[#261818] px-4 py-6">
           <div className="px-4 pb-8">
-            <h1 className="font-epilogue text-2xl font-semibold leading-8 text-[#FFB3B3]">Nocturnal</h1>
-            <p className="text-xs font-medium leading-4 tracking-[0.13em] text-[#E1BEBE]/70">Epicurean Management</p>
+            <h1 className="font-epilogue text-2xl font-semibold leading-8 text-[#FFB3B3]">Yum Yum</h1>
+            <p className="text-xs font-medium leading-4 tracking-[0.13em] text-[#E1BEBE]/70">Buffet Management</p>
           </div>
 
           <nav className="flex flex-1 flex-col gap-2">
@@ -3010,7 +2851,7 @@ export default function Home() {
           <div className="grid gap-8 p-8">
             <section className="grid grid-cols-3 gap-8">
               {renderManagerKpi("AVG. COST PER HEAD", formatBaht(metrics.costPerHead), `${metrics.ingredientCostRatio.toFixed(1)}% ingredient cost ratio`, `${metrics.guests} guests`, "accent")}
-              {renderManagerKpi("AVG. DINING DURATION", `${metrics.avgDiningMinutes || 0} Mins`, diningTargetDetail, metrics.activeShifts ? `${metrics.activeShifts} active staff` : "", "neutral")}
+              {renderManagerKpi("AVG. DINING DURATION", `${metrics.avgDiningMinutes || 0} Mins`, diningTargetDetail, metrics.activeStaff ? `${metrics.activeStaff} active staff` : "", "neutral")}
               {renderManagerKpi("AVG. SERVING SPEED", formatMinutesForManager(metrics.avgServiceMinutes), servingDetail, servingStatus, "teal")}
             </section>
 
@@ -3282,12 +3123,9 @@ export default function Home() {
           <label>Category<select name="category_id" required>{db.menu_categories.map((category) => <option key={category.category_id} value={category.category_id}>{category.name}</option>)}</select></label>
           <label>Description<textarea name="description" rows="3" /></label>
           <label>Image path or URL<input name="image_url" placeholder="/menu/pork-shoulder.svg" /></label>
-          <label>Kitchen station<input name="kitchen_station" defaultValue="hotpot" /></label>
-          <label>Target prep minutes<input name="prep_time_minutes" type="number" min="1" defaultValue="5" /></label>
-          <label>Add-on price<input name="price" type="number" min="0" defaultValue="0" required /></label>
           <button type="submit">Add menu</button>
         </form>
-        <section className="panel"><h2>Active menu</h2><div className="table-wrap"><table><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Station</th><th>Prep</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeRows.map((item) => <tr key={item.menu_id}><td>{item.image_url ? <img src={item.image_url} alt="" className="h-12 w-16 rounded object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : "-"}</td><td>{item.name}</td><td>{helpers.categoryById(item.category_id)?.name}</td><td>{item.kitchen_station || "general"}</td><td>{item.prep_time_minutes || 0} min</td><td>{money(item.price)}</td><td><span className={`pill ${item.is_available ? "available" : "cancelled"}`}>{item.is_available ? "available" : "hidden"}</span></td><td><div className="actions"><button type="button" onClick={() => safe(() => updateMenuAvailability(item.menu_id, !item.is_available))}>{item.is_available ? "Hide" : "Show"}</button><button className="danger" type="button" onClick={() => safe(() => softDeleteMenu(item.menu_id))}>Remove</button></div></td></tr>)}</tbody></table></div></section>
+        <section className="panel"><h2>Active menu</h2><div className="table-wrap"><table><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeRows.map((item) => <tr key={item.menu_id}><td>{item.image_url ? <img src={item.image_url} alt="" className="h-12 w-16 rounded object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : "-"}</td><td>{item.name}</td><td>{helpers.categoryById(item.category_id)?.name}</td><td><span className={`pill ${item.is_available ? "available" : "cancelled"}`}>{item.is_available ? "available" : "hidden"}</span></td><td><div className="actions"><button type="button" onClick={() => safe(() => updateMenuAvailability(item.menu_id, !item.is_available))}>{item.is_available ? "Hide" : "Show"}</button><button className="danger" type="button" onClick={() => safe(() => softDeleteMenu(item.menu_id))}>Remove</button></div></td></tr>)}</tbody></table></div></section>
       </div>
     );
   }
@@ -3308,8 +3146,8 @@ export default function Home() {
       <main className="min-h-screen w-full bg-[#1D1010] pl-64 font-manrope text-[#F7DCDC]">
         <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col bg-[#261818] px-4 py-6">
           <div className="px-4 pb-8">
-            <h1 className="font-epilogue text-2xl font-semibold leading-8 tracking-normal text-[#FFB3B3]">Nocturnal</h1>
-            <p className="text-xs font-medium leading-4 tracking-[0.13em] text-[#E1BEBE]/70">Epicurean Management</p>
+            <h1 className="font-epilogue text-2xl font-semibold leading-8 tracking-normal text-[#FFB3B3]">Yum Yum</h1>
+            <p className="text-xs font-medium leading-4 tracking-[0.13em] text-[#E1BEBE]/70">Buffet Management</p>
           </div>
 
           <nav className="flex flex-1 flex-col gap-2">
@@ -3547,7 +3385,7 @@ export default function Home() {
     const lowStockItems = db.inventory_items.filter((item) => !item.deleted_at && item.quantity_on_hand <= item.reorder_level);
     if (tab === "suppliers") {
       const suppliers = [
-        ["Nocturnal Beef Co.", "Beef", "Stable"],
+        ["Yum Yum Beef Co.", "Beef", "Stable"],
         ["Andaman Night Market", "Seafood", lowStockItems.some((item) => inventoryCategory(item) === "Seafood") ? "Needs reorder" : "Stable"],
         ["Garden Collective", "Vegetables", "Stable"]
       ];
@@ -3648,22 +3486,18 @@ export default function Home() {
 
   function renderManagerStaff() {
     const activeUsers = db.users.filter((user) => !user.deleted_at);
-    const recentShifts = (db.staff_shifts || []).slice().sort((a, b) => new Date(b.clock_in_at) - new Date(a.clock_in_at)).slice(0, 10);
     return (
-      <>
-        <div className="grid split">
-          <form className="panel form-grid" onSubmit={(event) => safe(() => handleAddUser(event))}>
-            <h2>Add staff login</h2>
-            <label>Full name<input name="full_name" required /></label>
-            <label>Username<input name="username" required /></label>
-            <label>Password<input name="password" type="password" required /></label>
-            <label>Role<select name="role"><option value="cashier">cashier</option><option value="kitchen">kitchen</option><option value="waiter">waiter</option><option value="manager">manager</option></select></label>
-            <button type="submit">Add staff</button>
-          </form>
-          <section className="panel"><h2>Staff users</h2><div className="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeUsers.map((user) => <tr key={user.user_id}><td>{user.full_name}</td><td>{user.username}</td><td>{user.role}</td><td><span className={`pill ${user.is_active ? "available" : "cancelled"}`}>{user.is_active ? "active" : "inactive"}</span></td><td><button className="danger" type="button" onClick={() => softDeleteUser(user.user_id)}>Deactivate</button></td></tr>)}</tbody></table></div></section>
-        </div>
-        <section className="panel" style={{ marginTop: "1rem" }}><h2>Shift clock-in history</h2><div className="table-wrap"><table><thead><tr><th>Staff</th><th>Role</th><th>Station</th><th>Clock in</th><th>Clock out</th><th>Hours</th></tr></thead><tbody>{recentShifts.length ? recentShifts.map((shift) => <tr key={shift.shift_id}><td>{helpers.userById(shift.user_id)?.full_name || shift.user_id}</td><td>{shift.role_snapshot}</td><td>{shift.station}</td><td>{shortDateTime(shift.clock_in_at)}</td><td>{shift.clock_out_at ? shortDateTime(shift.clock_out_at) : "Active"}</td><td>{(shiftMinutes(shift) / 60).toFixed(1)}</td></tr>) : <tr><td colSpan="6">No shifts recorded.</td></tr>}</tbody></table></div></section>
-      </>
+      <div className="grid split">
+        <form className="panel form-grid" onSubmit={(event) => safe(() => handleAddUser(event))}>
+          <h2>Add staff login</h2>
+          <label>Full name<input name="full_name" required /></label>
+          <label>Username<input name="username" required /></label>
+          <label>Password<input name="password" type="password" required /></label>
+          <label>Role<select name="role"><option value="cashier">cashier</option><option value="kitchen">kitchen</option><option value="waiter">waiter</option><option value="manager">manager</option></select></label>
+          <button type="submit">Add staff</button>
+        </form>
+        <section className="panel"><h2>Staff users</h2><div className="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeUsers.map((user) => <tr key={user.user_id}><td>{user.full_name}</td><td>{user.username}</td><td>{user.role}</td><td><span className={`pill ${user.is_active ? "available" : "cancelled"}`}>{user.is_active ? "active" : "inactive"}</span></td><td><button className="danger" type="button" onClick={() => softDeleteUser(user.user_id)}>Deactivate</button></td></tr>)}</tbody></table></div></section>
+      </div>
     );
   }
 

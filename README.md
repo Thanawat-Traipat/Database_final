@@ -1,4 +1,4 @@
-# The Nocturnal Epicurean Database Final Project
+# Yum Yum Buffet Database Final Project
 
 This workspace contains a working Next.js website prototype plus Supabase-ready database files for a dine-in buffet restaurant system.
 

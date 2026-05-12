@@ -7,12 +7,12 @@ This file is a practical checklist for improving the project before submission. 
 | Area | Status | Evidence |
 | --- | --- | --- |
 | Relational DBMS choice | Strong | PostgreSQL/Supabase fits table-session-order-inventory relationships |
-| Core entities | Strong | Staff, tables, sessions, orders, order items, menu, recipes, inventory, payments, shifts, audit logs |
+| Core entities | Strong | Staff users, tables, sessions, orders, order items, menu, recipes, inventory, payments, and audit logs |
 | Relationship modeling | Strong | Foreign keys connect operational workflows instead of storing repeated text |
-| Insert coverage | Strong | Sessions, orders, order items, staff shifts, payments, menu items, inventory items, users |
+| Insert coverage | Strong | Sessions, orders, order items, payments, menu items, inventory items, users |
 | Update coverage | Strong | Table status, order status, payment state, stock, menu availability |
 | Soft delete coverage | Strong | `deleted_at` and `is_active` preserve historical references |
-| Advanced query coverage | Strong | Revenue, peak hour, top menu, cost per head, service speed, bottleneck, staff hours |
+| Advanced query coverage | Strong | Revenue, peak hour, top menu count, ingredient usage, cost per head, service speed, bottleneck |
 | Interface/DB integration | Strong | App is Supabase-only and stops when Supabase env vars are missing |
 
 ## Improvements Already Applied
@@ -20,7 +20,7 @@ This file is a practical checklist for improving the project before submission. 
 | Improvement | Why It Matters |
 | --- | --- |
 | Added `uq_open_session_per_table` | Prevents one table from accidentally having two open sessions |
-| Added `uq_active_shift_per_user` | Prevents duplicate active shifts for one staff user |
+| Removed shift-only tables | Keeps the model focused on the actual final UI scope |
 | Added composite/partial indexes | Makes cashier grid, KDS queue, dashboard, and audit queries faster |
 | Updated ERD with `out_for_serving_at` | Waiter flow is now represented in the logical model |
 | Expanded data dictionary with samples | Satisfies the physical design requirement more clearly |
@@ -43,15 +43,15 @@ This file is a practical checklist for improving the project before submission. 
 
 | Query Type | Index Support |
 | --- | --- |
-| Cashier 15-table grid | `idx_tables_active_status`, `idx_sessions_table_status_opened` |
-| Active session detail | `idx_orders_session_ordered`, `idx_order_items_order_status` |
+| Cashier 15-table grid | `idx_dining_sessions_table_status` |
+| Active session detail | `idx_orders_session_time`, `idx_order_items_order_id` |
 | Customer menu | `idx_menu_items_active_category` |
-| Kitchen queue | `idx_order_items_status_requested`, `idx_order_items_priority` |
-| Waiter queue | `idx_order_items_status_requested`, `idx_order_items_order_status` |
-| Dashboard revenue | `idx_payments_status_paid_at` |
-| Top menu | `idx_order_items_menu_id`, `idx_order_items_status_requested` |
-| Ingredient usage | `idx_transactions_type_occurred`, `idx_transactions_ingredient_occurred` |
-| Staff audit | `idx_staff_activity_occurred_desc` |
+| Kitchen queue | `idx_order_items_status_time` |
+| Waiter queue | `idx_order_items_status_time`, `idx_order_items_order_id` |
+| Dashboard revenue | `idx_payments_paid_at` |
+| Top menu | `idx_order_items_status_time` plus joins to `menu_items` |
+| Ingredient usage | `idx_inventory_transactions_time` |
+| Staff audit | `idx_activity_time` |
 
 ## Report-Writing Notes
 

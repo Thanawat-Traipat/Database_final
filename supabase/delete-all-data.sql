@@ -1,10 +1,8 @@
--- DESTRUCTIVE DATA WIPE FOR THE NOCTURNAL EPICUREAN DEMO.
--- Paste this file into Supabase SQL Editor only when you want to remove every row.
--- It keeps the schema, enum types, indexes, comments, and workflow functions.
--- After this runs, the app has no login users until you run supabase/seed.sql
--- or supabase/reset-new-ux.sql again.
+-- DESTRUCTIVE DATA WIPE.
+-- This keeps the simplified schema/functions but removes every row.
+-- Run seed.sql afterwards if you want the demo records back.
 
-create or replace function delete_all_nocturnal_epicurean_data()
+create or replace function delete_all_yum_yum_buffet_data()
 returns void
 language plpgsql
 as $$
@@ -21,10 +19,9 @@ begin
     inventory_items,
     menu_categories,
     restaurant_tables,
-    staff_shifts,
     app_users
   restart identity cascade;
 end;
 $$;
 
-select delete_all_nocturnal_epicurean_data();
+select delete_all_yum_yum_buffet_data();

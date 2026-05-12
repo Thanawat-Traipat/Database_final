@@ -4,7 +4,7 @@ Use this outline for the Word/PDF report. It follows the assignment rubric direc
 
 ## 1. Project Overview
 
-- Project name: The Nocturnal Epicurean Restaurant Management System
+- Project name: Yum Yum Buffet Restaurant Management System
 - DBMS: PostgreSQL on Supabase
 - Web framework: Next.js deployed on Vercel
 - Main workflows: cashier table management, customer iPad ordering, kitchen queue, waiter serving queue, manager dashboard, inventory management

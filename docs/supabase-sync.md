@@ -1,92 +1,62 @@
-# Supabase Sync Requirements
+# Supabase Sync Notes
 
-The app now uses Supabase as the source of truth when these browser-safe environment variables exist:
+The app is Supabase-only for the submitted project. It loads data through `app/lib/supabaseDatabase.js` when these variables are present:
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 ```
 
-If either variable is missing, the app stops and shows a database-required message. This is intentional because the class project must use a DBMS-backed interface.
-
-## One-Time Setup
-
-1. Create a Supabase project.
-2. Open Supabase SQL Editor.
-3. Paste and run `supabase/reset-new-ux.sql` for a clean rebuild with seed data.
-4. Copy `.env.local.example` to `.env.local`.
-5. Fill in `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` from Project Settings > API.
-6. Restart `npm run dev`.
-
-If you only want to clear rows while keeping the schema/functions, run `supabase/delete-all-data.sql`, then rerun `supabase/seed.sql` when you want the demo rows back.
-
-The values go in `/Users/thanawattraipat/Documents/Database_final/.env.local` for local development. Vercel needs the same variable names in Project Settings > Environment Variables.
-
-## Vercel Deployment
-
-1. Push the project to GitHub.
-2. Import the repo in Vercel.
-3. In Vercel Project Settings > Environment Variables, add:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-4. Add the variables to Production, Preview, and Development.
-5. Keep the Vercel Framework Preset as Next.js.
-6. The included `vercel.json` sets `npm ci` and `npm run build`.
-7. Redeploy after saving the variables.
-8. Confirm the deployed URL loads the staff login instead of the database-required message.
-
-## Tables The App Syncs
-
-The React app loads these tables on boot and upserts them after every workflow action:
+## Synced Tables
 
 - `app_users`
-- `staff_shifts`
-- `staff_activity_logs`
 - `restaurant_tables`
-- `dining_sessions`
-- `payments`
 - `menu_categories`
-- `menu_items`
-- `orders`
-- `order_items`
 - `inventory_items`
+- `menu_items`
 - `recipes`
-- `inventory_transactions`
-
-## Columns Needed By The UX
-
-- Staff login and shift change: `app_users`, `staff_shifts`, `staff_activity_logs`
-- Cashier 15-table grid: `restaurant_tables`, `dining_sessions`, `payments`
-- 90-minute dining timer: `dining_sessions.opened_at`
-- 10-minute cleaning timer: `restaurant_tables.status`, `restaurant_tables.cleaning_started_at`
-- Optional SQL cleaning helper: `release_completed_cleaning_tables()`
-- Cash-only checkout: `payments.method`, `payments.paid_amount`, `dining_sessions.payment_status`
-- Customer menu: `menu_categories`, `menu_items`, `recipes`, `inventory_items`
-- Basket/order sending: `orders`, `order_items`
-- Kitchen queue: `order_items.status`, `requested_at`, `cooking_at`, `ready_at`, `priority_level`, `priority_reason`
-- Waiter serving flow: `order_items.out_for_serving_at`, `served_at`
-- Manager dashboard: `payments`, `dining_sessions`, `order_items`, `menu_items`, `menu_categories`, `inventory_transactions`, `inventory_items`, `restaurant_tables`, `staff_shifts`
-- Inventory kiosk toggle: `menu_items.is_available`, `inventory_items.quantity_on_hand`, `deleted_at`
-
-## Permissions Needed
-
-For a class demo, the fastest path is to run the SQL without enabling Row Level Security. If you enable RLS, the anon key needs policies that allow `select`, `insert`, `update`, and `delete` on the synced tables above. The reset button clears and rewrites those tables, so it also needs `delete`.
-
-Do not put the Supabase service-role key in `NEXT_PUBLIC_*` variables. That key is server-only.
-
-## Optional Realtime
-
-For multiple devices to update instantly without refreshing, enable Supabase Realtime for:
-
-- `restaurant_tables`
 - `dining_sessions`
 - `orders`
 - `order_items`
 - `payments`
-- `menu_items`
-- `inventory_items`
-- `staff_shifts`
 - `staff_activity_logs`
 - `inventory_transactions`
 
-The current app persists to Supabase on every workflow action. Realtime is the next layer if you want separate cashier, kitchen, waiter, customer, and manager browsers to refresh automatically without manual page reloads.
+## Adapter Logic
+
+`loadDatabaseFromSupabase()` selects every table and maps Supabase primary keys into the readable local IDs used by the UI. For example, `menu_items.menu_id = 1` becomes `menu-1`, and table code `02` remains `02`.
+
+`syncDatabaseToSupabase(database)` upserts the current app state back to Supabase after every UI mutation.
+
+`replaceDatabaseInSupabase(database)` truncates rows in dependency order and then upserts the current state. The Reset Demo button uses this path.
+
+## Main Data Flows
+
+| Flow | Supabase tables updated |
+| --- | --- |
+| Staff login / role test bar | `app_users`, `staff_activity_logs` |
+| Cashier opens table | `restaurant_tables`, `dining_sessions`, `staff_activity_logs` |
+| Customer sends order | `orders`, `order_items` |
+| Kitchen starts/prepares/expedites | `order_items`, `staff_activity_logs` |
+| Waiter sends/serves food | `order_items`, `inventory_items`, `inventory_transactions`, `staff_activity_logs` |
+| Cashier processes payment | `payments`, `dining_sessions`, `restaurant_tables`, `order_items`, `staff_activity_logs` |
+| Manager menu/inventory/staff edits | `menu_items`, `inventory_items`, `app_users`, `inventory_transactions`, `staff_activity_logs` |
+
+## Time Fields Used
+
+- `dining_sessions.opened_at`: customer starts seating.
+- `orders.ordered_at`: customer submits an order batch.
+- `order_items.requested_at`: kitchen/waiter timer start for each item.
+- `order_items.ready_at`: kitchen marks food ready.
+- `order_items.out_for_serving_at`: waiter takes food from pass.
+- `order_items.served_at`: waiter marks food served.
+- `dining_sessions.closed_at`: cashier closes the bill and customer leaves.
+
+## Final Schema Choices
+
+- No `staff_shifts`; the app does not track shift duration.
+- No `customer_code`; the iPad uses the selected open session.
+- No `waiter_id`; several waiters can serve the same table.
+- No menu `price`; billing is based on buffet guest counts.
+- `recipes` uses `(menu_id, ingredient_id)` as the primary key.
+- `inventory_transactions.transaction_type` is limited to `usage` and `manual_adjustment`.

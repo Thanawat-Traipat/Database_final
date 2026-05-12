@@ -68,7 +68,7 @@ Then replace the placeholder values with the real Supabase values.
 1. Open the Vercel URL.
 2. Login as `cashier`.
 3. Open a table or change table state.
-4. In Supabase Table Editor, confirm rows changed in `dining_sessions`, `restaurant_tables`, `staff_shifts`, or `staff_activity_logs`.
+4. In Supabase Table Editor, confirm rows changed in `dining_sessions`, `restaurant_tables`, `order_items`, or `staff_activity_logs`.
 5. Login as `kitchen`, `waiter`, and `manager` to test the remaining workflow pages.
 
 ## Troubleshooting
