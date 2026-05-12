@@ -26,7 +26,7 @@ The app requires Supabase. If `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABAS
 | `order_items` | Kitchen/waiter queue rows with status timestamps |
 | `inventory_items` | Ingredient stock, low-stock threshold, unit, cost, and soft delete |
 | `recipes` | Composite bridge from menu item to ingredient quantity |
-| `inventory_transactions` | Stock ledger for automatic usage and manual adjustment |
+| `inventory_transactions` | Stock ledger for automatic usage, restock, waste, and manual adjustment |
 
 ## 3. Required Database Logic
 
@@ -36,7 +36,7 @@ The app requires Supabase. If `NEXT_PUBLIC_SUPABASE_URL` or `NEXT_PUBLIC_SUPABAS
 4. Kitchen status changes update `order_items.status`, `cooking_at`, `ready_at`, and `expedited_at`.
 5. Waiter service uses the original `order_items.requested_at` timer; late items are detected after 15 minutes.
 6. Serving an item deducts inventory through `recipes` and inserts `inventory_transactions` with `transaction_type = 'usage'`.
-7. Manager manual stock edits insert `inventory_transactions` with `transaction_type = 'manual_adjustment'`.
+7. Manager stock edits insert `inventory_transactions` with `transaction_type = 'restock'`, `'waste'`, or `'manual_adjustment'`.
 8. Soft delete sets `deleted_at` on `app_users`, `menu_items`, and `inventory_items`.
 9. Cash checkout inserts `payments`, closes `dining_sessions`, cancels unfinished `order_items`, and starts table cleaning.
 10. Cleaning tables become ready after 10 minutes by clearing `cleaning_started_at` and setting status to `available`.

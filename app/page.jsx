@@ -35,10 +35,7 @@ const ROLE_NAVIGATION = {
   waiter: [["waiter-serve", "Ready to serve"]],
   manager: [
     ["manager-dashboard", "Dashboard"],
-    ["manager-menu", "Menu"],
-    ["manager-inventory", "Inventory"],
-    ["manager-staff", "Staff"],
-    ["manager-trash", "Removed"]
+    ["manager-inventory", "Inventory"]
   ]
 };
 
@@ -363,10 +360,7 @@ export default function Home() {
   const [customerHistoryFilter, setCustomerHistoryFilter] = useState("preparing");
   const [cart, setCart] = useState({});
   const [managerRange, setManagerRange] = useState("today");
-  const [managerHourFilter, setManagerHourFilter] = useState("all");
-  const [managerMinimum, setManagerMinimum] = useState(0);
   const [inventorySearch, setInventorySearch] = useState("");
-  const [inventoryTab, setInventoryTab] = useState("stocks");
   const [inventoryAddOpen, setInventoryAddOpen] = useState(false);
   const [notice, setNotice] = useState(null);
   const [clockNow, setClockNow] = useState(Date.now());
@@ -762,7 +756,7 @@ export default function Home() {
       occurred_at: now
     });
 
-    commit(nextDb, `Logged in as ${screen.label} via role test bar.`);
+    commit(nextDb);
     setUserId(targetUser.user_id);
     setView(screen.view);
   }
@@ -1048,7 +1042,7 @@ export default function Home() {
     }, isAvailable ? "Linked iPad menu items are visible." : "Linked iPad menu items hidden from customer iPad.");
   }
 
-  function adjustIngredientStock(ingredientId, delta) {
+  function adjustIngredientStock(ingredientId, delta, transactionType = delta >= 0 ? "restock" : "manual_adjustment") {
     mutate((nextDb) => {
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === ingredientId);
       if (!ingredient) throw new Error("Ingredient not found.");
@@ -1059,13 +1053,13 @@ export default function Home() {
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
         order_item_id: null,
-        transaction_type: "manual_adjustment",
+        transaction_type: transactionType,
         quantity_change: delta,
         unit_cost_snapshot: ingredient.unit_cost,
         occurred_at: new Date().toISOString()
       });
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
-      recordStaffActivity(nextDb, "quick_stock_adjustment", "inventory_item", ingredient.ingredient_id, `${delta >= 0 ? "+" : ""}${delta} ${ingredient.unit}`);
+      recordStaffActivity(nextDb, "quick_stock_adjustment", "inventory_item", ingredient.ingredient_id, `${transactionType}: ${delta >= 0 ? "+" : ""}${delta} ${ingredient.unit}`);
     }, "Stock quantity updated.");
   }
 
@@ -1092,23 +1086,39 @@ export default function Home() {
     const form = Object.fromEntries(new FormData(event.currentTarget));
     mutate((nextDb) => {
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === form.ingredient_id);
-      const quantity = Number(form.quantity || 0);
-      const signedQuantity = form.direction === "decrease" ? -quantity : quantity;
+      if (!ingredient) throw new Error("Ingredient not found.");
+      const quantity = Math.abs(Number(form.quantity || 0));
+      if (!quantity) throw new Error("Enter a stock movement quantity.");
+      const movement = stockMovementFromType(form.movement_type, quantity);
+      const signedQuantity = movement.quantity_change;
       if (ingredient.quantity_on_hand + signedQuantity < 0) throw new Error("Stock movement would make inventory negative.");
       ingredient.quantity_on_hand = Number((ingredient.quantity_on_hand + signedQuantity).toFixed(2));
       nextDb.inventory_transactions.push({
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
         order_item_id: null,
-        transaction_type: "manual_adjustment",
+        transaction_type: movement.transaction_type,
         quantity_change: signedQuantity,
         unit_cost_snapshot: ingredient.unit_cost,
         occurred_at: new Date().toISOString()
       });
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
-      recordStaffActivity(nextDb, "record_stock_movement", "inventory_item", ingredient.ingredient_id, `${signedQuantity} ${ingredient.unit}`);
+      recordStaffActivity(nextDb, "record_stock_movement", "inventory_item", ingredient.ingredient_id, `${movement.label}: ${signedQuantity >= 0 ? "+" : ""}${signedQuantity} ${ingredient.unit}`);
     }, "Stock movement recorded.");
     event.currentTarget.reset();
+  }
+
+  function stockMovementFromType(type, quantity) {
+    if (type === "restock") {
+      return { transaction_type: "restock", quantity_change: quantity, label: "Restock" };
+    }
+    if (type === "waste") {
+      return { transaction_type: "waste", quantity_change: -quantity, label: "Waste" };
+    }
+    if (type === "adjustment_remove") {
+      return { transaction_type: "manual_adjustment", quantity_change: -quantity, label: "Manual correction" };
+    }
+    return { transaction_type: "manual_adjustment", quantity_change: quantity, label: "Manual correction" };
   }
 
   function softDeleteIngredient(ingredientId) {
@@ -1181,7 +1191,7 @@ export default function Home() {
   };
 
   // Dashboard calculations mirror supabase/queries.sql and power the Figma manager view.
-  function calculateDashboardMetrics(range = managerRange, hourFilter = managerHourFilter, minimum = managerMinimum) {
+  function calculateDashboardMetrics(range = managerRange) {
     const now = new Date();
     const start = new Date(now);
     if (range === "week") {
@@ -1192,13 +1202,9 @@ export default function Home() {
       if (!value) return false;
       const date = new Date(value);
       if (date < start || date > now) return false;
-      const hour = date.getHours();
-      if (hourFilter === "lunch") return hour >= 10 && hour < 17;
-      if (hourFilter === "dinner") return hour >= 17 && hour <= 23;
       return true;
     };
     const tables = db.restaurant_tables;
-    const rangePayments = db.payments.filter((payment) => payment.status === "paid" && inRange(payment.paid_at));
     const rangeSessions = db.dining_sessions.filter((session) => inRange(session.opened_at));
     const rangeUsage = db.inventory_transactions.filter((txn) => txn.transaction_type === "usage" && inRange(txn.occurred_at));
     const rangeOrderItems = db.order_items.filter((item) => item.status !== "cancelled" && inRange(item.requested_at));
@@ -1206,6 +1212,33 @@ export default function Home() {
     const orderMap = {};
     const ingredientMap = {};
     const tableStateCounts = { occupied: 0, available: 0, cleaning: 0 };
+
+    db.menu_items
+      .filter((menu) => !menu.deleted_at)
+      .forEach((menu) => {
+        const category = helpers.categoryById(menu.category_id);
+        orderMap[menu.menu_id] = {
+          menu_id: menu.menu_id,
+          name: menu.name,
+          category: category?.name || "Uncategorized",
+          image_url: menu.image_url || "",
+          quantity: 0
+        };
+      });
+
+    db.inventory_items
+      .filter((ingredient) => !ingredient.deleted_at)
+      .forEach((ingredient) => {
+        ingredientMap[ingredient.ingredient_id] = {
+          id: ingredient.ingredient_id,
+          name: ingredient.name,
+          unit: ingredient.unit,
+          remaining: Number(ingredient.quantity_on_hand) || 0,
+          reorderLevel: Number(ingredient.reorder_level) || 0,
+          quantity: 0,
+          cost: 0
+        };
+      });
 
     rangeOrderItems.forEach((item) => {
       const menu = helpers.menuById(item.menu_id);
@@ -1228,8 +1261,8 @@ export default function Home() {
         id: ingredient.ingredient_id,
         name: ingredient.name,
         unit: ingredient.unit,
-        remaining: ingredient.quantity_on_hand,
-        reorderLevel: ingredient.reorder_level,
+        remaining: Number(ingredient.quantity_on_hand) || 0,
+        reorderLevel: Number(ingredient.reorder_level) || 0,
         quantity: 0,
         cost: 0
       };
@@ -1238,12 +1271,10 @@ export default function Home() {
     });
 
     const guests = rangeSessions.reduce((sum, session) => sum + sessionGuests(session), 0);
-    const paidRevenue = rangePayments.reduce((sum, payment) => sum + payment.paid_amount, 0);
-    const estimatedRevenue = rangeSessions.reduce((sum, session) => sum + sessionTotal(session), 0);
-    const revenue = paidRevenue || estimatedRevenue;
     const ingredientCost = rangeUsage.reduce((sum, txn) => sum + Math.abs(txn.quantity_change) * txn.unit_cost_snapshot, 0);
     const serviceMinutes = servedItems.map((item) => minutesBetween(item.requested_at, item.served_at)).filter((value) => value != null);
-    const diningMinutes = rangeSessions.map((session) => minutesBetween(session.opened_at, session.closed_at || new Date().toISOString())).filter((value) => value != null);
+    const totalServiceMinutes = serviceMinutes.reduce((sum, value) => sum + value, 0);
+    const servedOrderCount = serviceMinutes.length;
     const trafficHours = [10, 12, 14, 16, 18, 20, 22];
     const traffic = trafficHours.map((hour) => ({ hour, guests: 0 }));
     rangeSessions.forEach((session) => {
@@ -1263,36 +1294,34 @@ export default function Home() {
     });
 
     const topMenu = Object.values(orderMap)
-      .filter((row) => row.quantity >= minimum)
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 4);
+      .sort((a, b) => (b.quantity - a.quantity) || a.name.localeCompare(b.name));
     const maxMenuQty = Math.max(1, ...topMenu.map((row) => row.quantity));
     const ingredientUsage = Object.values(ingredientMap)
-      .filter((row) => row.quantity >= minimum)
-      .sort((a, b) => b.quantity - a.quantity)
-      .slice(0, 5)
+      .sort((a, b) => a.name.localeCompare(b.name))
       .map((row) => {
         const totalObservedStock = row.quantity + row.remaining;
         const usedSharePercent = totalObservedStock ? Math.round((row.quantity / totalObservedStock) * 100) : 0;
+        const status = row.remaining <= 0
+          ? "Out of Stock"
+          : row.remaining <= row.reorderLevel
+            ? "Reorder Now"
+            : "Optimal";
         return {
           ...row,
           usedSharePercent,
           remainingSharePercent: totalObservedStock ? 100 - usedSharePercent : 0,
-          status: row.remaining <= row.reorderLevel ? "Low Stock" : row.remaining <= row.reorderLevel * 1.5 ? "Watch" : "Optimal"
+          status
         };
       });
 
     return {
       rangeLabel: range === "week" ? "Last 7 days" : "Today",
-	      revenue,
 	      guests,
 	      ingredientCost,
 	      costPerHead: guests ? ingredientCost / guests : 0,
-	      ingredientCostRatio: revenue ? (ingredientCost / revenue) * 100 : 0,
-	      avgServiceMinutes: average(serviceMinutes),
-	      avgDiningMinutes: average(diningMinutes),
+	      avgServiceMinutes: servedOrderCount ? Math.round(totalServiceMinutes / servedOrderCount) : 0,
 	      servedItemCount: servedItems.reduce((sum, item) => sum + item.quantity, 0),
-      activeStaff: db.users.filter((user) => user.is_active && !user.deleted_at).length,
+      servedOrderCount,
       peakHour: peakRows.length ? peakRows.map((row) => `${String(row.hour).padStart(2, "0")}:00`).join(", ") : "-",
       peakGuests: maxTrafficGuests,
       traffic: traffic.map((row) => ({
@@ -1301,7 +1330,7 @@ export default function Home() {
         percent: row.guests > 0 ? Math.max(8, Math.round((row.guests / maxTraffic) * 100)) : 8
       })),
       maxTopMenuQty: maxMenuQty,
-      topMenu: topMenu.map((row) => ({ ...row, percent: Math.max(8, Math.round((row.quantity / maxMenuQty) * 100)) })),
+      topMenu: topMenu.map((row) => ({ ...row, percent: row.quantity > 0 ? Math.max(8, Math.round((row.quantity / maxMenuQty) * 100)) : 0 })),
       lowStock: db.inventory_items.filter((item) => !item.deleted_at && item.quantity_on_hand <= item.reorder_level),
       ingredientUsage,
       tableStateCounts,
@@ -1926,7 +1955,6 @@ export default function Home() {
   function countBadge(targetView) {
     if (targetView === "kitchen-queue") return db.order_items.filter((item) => ["pending", "cooking", "ready"].includes(item.status)).length;
     if (targetView === "waiter-serve") return db.order_items.filter((item) => ["ready", "out_for_serving"].includes(item.status)).length;
-    if (targetView === "manager-trash") return db.menu_items.filter((item) => item.deleted_at).length + db.inventory_items.filter((item) => item.deleted_at).length + db.users.filter((user) => user.deleted_at).length;
     return "";
   }
 
@@ -1937,10 +1965,7 @@ export default function Home() {
       "kitchen-queue": "Kitchen queue",
       "waiter-serve": "Ready to serve",
       "manager-dashboard": "Manager dashboard",
-      "manager-menu": "Menu management",
-      "manager-inventory": "Inventory management",
-      "manager-staff": "Staff management",
-      "manager-trash": "Removed list"
+      "manager-inventory": "Inventory management"
     }[view] || "Workspace";
   }
 
@@ -1950,10 +1975,7 @@ export default function Home() {
     if (view === "kitchen-queue") return renderKitchenQueue();
     if (view === "waiter-serve") return renderWaiterServe();
     if (view === "manager-dashboard") return renderManagerDashboard();
-    if (view === "manager-menu") return renderManagerMenu();
     if (view === "manager-inventory") return renderManagerInventory();
-    if (view === "manager-staff") return renderManagerStaff();
-    if (view === "manager-trash") return renderRemovedList();
     return <p className="empty">No screen configured.</p>;
   }
 
@@ -2133,8 +2155,24 @@ export default function Home() {
   }
 
   function renderCustomerFoodVisual(item) {
+    const visualClass = item.visual || customerCategoryForItem(item).key;
+    const imageUrl = item.image_url?.trim();
+
     return (
-      <div className={`customer-food-visual ${item.visual}`} role="img" aria-label={item.displayName}>
+      <div className={`customer-food-visual ${visualClass} ${imageUrl ? "has-photo" : ""}`} role="img" aria-label={item.displayName}>
+        {imageUrl ? (
+          <img
+            src={imageUrl}
+            alt={item.displayName}
+            loading="lazy"
+            decoding="async"
+            referrerPolicy="no-referrer"
+            onError={(event) => {
+              event.currentTarget.style.display = "none";
+              event.currentTarget.parentElement?.classList.add("image-error");
+            }}
+          />
+        ) : null}
         <span />
         <i />
         <b />
@@ -2315,20 +2353,15 @@ export default function Home() {
       <main className="relative min-h-screen overflow-hidden bg-[#1D100F] text-[#F8DCDA]">
         <aside className="absolute left-0 top-0 flex h-full w-24 flex-col items-center justify-between border-r border-r-[rgba(90,64,63,0.18)] bg-[#180B0A] px-0 py-8 shadow-[10px_0_30px_0_rgba(0,0,0,0.30)]">
           <p className="font-epilogue text-xs font-extrabold leading-4 tracking-normal">YUM YUM</p>
-          <div className="flex h-64 w-14 flex-col items-center gap-[45px]">
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-[#960018] !p-0 font-manrope text-sm font-bold text-white" type="button" title="Kitchen queue">K</button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-transparent !p-0 font-manrope text-sm font-bold text-[rgba(248,220,218,0.40)]" type="button" title="Order tickets">O</button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-transparent !p-0 font-manrope text-sm font-bold text-[rgba(248,220,218,0.40)]" type="button" title="Settings">S</button>
-          </div>
-          <button className="h-10 w-10 rounded-xl border border-[rgba(90,64,63,0.30)] !bg-[#362625] !p-0 text-[10px] text-[#F8DCDA]" type="button" onClick={handleLogout}>
-            OUT
+          <button className="h-10 w-16 rounded-xl border border-[rgba(90,64,63,0.30)] !bg-[#362625] !p-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[#F8DCDA]" type="button" onClick={handleLogout}>
+            Log out
           </button>
         </aside>
 
         <header className="absolute left-24 top-0 flex h-24 w-[calc(100%-6rem)] items-center justify-between bg-[rgba(29,16,15,0.90)] px-16">
           <h1 className="font-epilogue text-2xl font-bold uppercase leading-8 tracking-normal text-[#FFFBFC]">Kitchen Display System</h1>
           <button className="!bg-transparent !p-0 font-epilogue text-3xl font-bold leading-9 text-[#FFFBFC]" type="button">
-            {activeItemCount} ORDERS
+            {activeItemCount} ITEMS
           </button>
         </header>
 
@@ -2351,9 +2384,6 @@ export default function Home() {
             {renderKitchenLegend("#8BD2DA", `${readyCount} READY`)}
             {renderKitchenLegend("#960018", `${lateCount} LATE`)}
           </div>
-          <button className="rounded border border-[rgba(255,255,255,0.18)] !bg-transparent px-4 py-2 font-manrope text-[10px] font-bold tracking-[0.35em] text-[rgba(248,220,218,0.65)]" type="button" onClick={resetDemo}>
-            RESET
-          </button>
         </footer>
       </main>
     );
@@ -2540,13 +2570,8 @@ export default function Home() {
       <main className="relative min-h-screen overflow-hidden bg-[#1D100F] text-[#F8DCDA]">
         <aside className="absolute left-0 top-0 flex h-full w-24 flex-col items-center justify-between border-r border-r-[rgba(90,64,63,0.18)] bg-[#180B0A] px-0 py-8 shadow-[10px_0_30px_0_rgba(0,0,0,0.30)]">
           <p className="font-epilogue text-xs font-extrabold leading-4 tracking-normal">YUM YUM</p>
-          <div className="flex h-64 w-14 flex-col items-center gap-[45px]">
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-[#8BD2DA] !p-0 font-manrope text-sm font-black text-[#001314]" type="button" title="Waiter service board">W</button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-transparent !p-0 font-manrope text-sm font-bold text-[rgba(248,220,218,0.40)]" type="button" title="Ready">R</button>
-            <button className="flex h-12 w-12 items-center justify-center rounded-lg !bg-transparent !p-0 font-manrope text-sm font-bold text-[rgba(248,220,218,0.40)]" type="button" title="Served">S</button>
-          </div>
-          <button className="h-10 w-10 rounded-xl border border-[rgba(90,64,63,0.30)] !bg-[#362625] !p-0 text-[10px] text-[#F8DCDA]" type="button" onClick={handleLogout}>
-            OUT
+          <button className="h-10 w-16 rounded-xl border border-[rgba(90,64,63,0.30)] !bg-[#362625] !p-0 text-[10px] font-bold uppercase tracking-[0.08em] text-[#F8DCDA]" type="button" onClick={handleLogout}>
+            Log out
           </button>
         </aside>
 
@@ -2578,9 +2603,6 @@ export default function Home() {
             {renderKitchenLegend("#FCD34D", `${servingCount} OUT FOR SERVING`)}
             {renderKitchenLegend("#B8001F", `${lateCount} EXPEDITE NOW`)}
           </div>
-          <button className="rounded border border-[rgba(255,255,255,0.18)] !bg-transparent px-4 py-2 font-manrope text-[10px] font-bold tracking-[0.35em] text-[rgba(248,220,218,0.65)]" type="button" onClick={resetDemo}>
-            RESET
-          </button>
         </footer>
       </main>
     );
@@ -2754,13 +2776,6 @@ export default function Home() {
   function renderManagerDashboard() {
     const metrics = calculateDashboardMetrics();
     const tables = db.restaurant_tables;
-    const diningTargetDetail = metrics.avgDiningMinutes && metrics.avgDiningMinutes > DINING_LIMIT_MINUTES
-      ? `${metrics.avgDiningMinutes - DINING_LIMIT_MINUTES} mins above target`
-      : `Within ${DINING_LIMIT_MINUTES} min target`;
-    const servingStatus = metrics.avgServiceMinutes <= 15 ? "OPTIMAL" : metrics.avgServiceMinutes <= 20 ? "WATCH" : "SLOW";
-    const servingDetail = metrics.servedItemCount
-      ? `${metrics.servedItemCount} served menu items measured`
-      : "No served items in selected range";
     return (
       <main className="min-h-screen w-full bg-[#170B0B] pl-64 font-manrope text-[#F7DCDC]">
         <aside className="fixed left-0 top-0 z-20 flex h-screen w-64 flex-col border-r border-[#594040] bg-[#261818] px-4 py-6">
@@ -2798,28 +2813,6 @@ export default function Home() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#A6192E]">{metrics.rangeLabel} insights</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#E1BEBE]">
-                Service Window
-                <select
-                  className="!min-h-0 !w-32 !rounded-lg !border !border-[#594040] !bg-[#261818] !px-3 !py-2 !text-sm !font-bold !text-[#F7DCDC]"
-                  value={managerHourFilter}
-                  onChange={(event) => setManagerHourFilter(event.target.value)}
-                >
-                  <option value="all">All Hours</option>
-                  <option value="lunch">Lunch</option>
-                  <option value="dinner">Dinner</option>
-                </select>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#E1BEBE]">
-                Min Qty
-                <input
-                  className="!min-h-0 !w-20 !rounded-lg !border !border-[#594040] !bg-[#261818] !px-3 !py-2 !text-center !text-sm !font-bold !text-[#F7DCDC]"
-                  min="0"
-                  type="number"
-                  value={managerMinimum}
-                  onChange={(event) => setManagerMinimum(Math.max(0, Number(event.target.value) || 0))}
-                />
-              </div>
               <div className="flex items-center gap-1 rounded-xl border border-[#594040] bg-[#261818] p-1">
                 <button
                   className={`!rounded-xl !px-4 !py-1 !text-xs !font-medium !tracking-[0.13em] ${managerRange === "today" ? "!bg-[#D63F4D] !text-[#140001]" : "!bg-transparent !text-[#E1BEBE]"}`}
@@ -2841,9 +2834,9 @@ export default function Home() {
 
           <div className="grid gap-8 p-8">
             <section className="grid grid-cols-3 gap-8">
-              {renderManagerKpi("AVG. COST PER HEAD", formatBaht(metrics.costPerHead), `${metrics.ingredientCostRatio.toFixed(1)}% ingredient cost ratio`, `${metrics.guests} guests`, "accent")}
-              {renderManagerKpi("AVG. DINING DURATION", `${metrics.avgDiningMinutes || 0} Mins`, diningTargetDetail, metrics.activeStaff ? `${metrics.activeStaff} active staff` : "", "neutral")}
-              {renderManagerKpi("AVG. SERVING SPEED", formatMinutesForManager(metrics.avgServiceMinutes), servingDetail, servingStatus, "teal")}
+              {renderManagerKpi("AVG. COST PER HEAD", formatBaht(metrics.costPerHead), "", "", "accent")}
+              {renderManagerKpi("TOTAL CUSTOMERS", metrics.guests.toLocaleString(), "", "", "neutral")}
+              {renderManagerKpi("AVG. SERVING SPEED", formatMinutesForManager(metrics.avgServiceMinutes), "", "", "neutral")}
             </section>
 
             <section className="grid grid-cols-[minmax(0,1.45fr)_minmax(320px,0.7fr)] gap-8">
@@ -2901,16 +2894,18 @@ export default function Home() {
                     <span>Used + Remaining Stock</span>
                     <span className="text-right">Status</span>
                   </div>
-                  {metrics.ingredientUsage.length ? metrics.ingredientUsage.map((row) => (
+                  <div className="max-h-[460px] overflow-y-auto pr-2">
+                    {metrics.ingredientUsage.length ? metrics.ingredientUsage.map((row) => (
                     <div className="grid grid-cols-[1.1fr_1.7fr_0.75fr] items-center gap-5 border-b border-[#594040]/30 py-4" key={row.id}>
                       <div>
                         <p className="text-sm font-bold leading-5 text-[#F7DCDC]">{row.name}</p>
                         <p className="text-[10px] uppercase tracking-[0.12em] text-[#E1BEBE]/60">{row.unit}</p>
                       </div>
                       {renderManagerStackedStockBar(row)}
-                      <p className={`text-right text-sm font-bold leading-5 ${row.status === "Low Stock" ? "text-[#FFB3B3]" : "text-[#8BD2DA]"}`}>{row.status}</p>
+                      <p className={`text-right text-sm font-bold leading-5 ${row.status === "Optimal" ? "text-[#8BD2DA]" : "text-[#FFB3B3]"}`}>{row.status}</p>
                     </div>
-                  )) : <p className="py-6 text-sm text-[#E1BEBE]">No ingredient usage matches the current filter.</p>}
+                    )) : <p className="py-6 text-sm text-[#E1BEBE]">No ingredients found in inventory.</p>}
+                  </div>
                 </div>
               </article>
 
@@ -2932,16 +2927,6 @@ export default function Home() {
           </div>
         </section>
 
-        <button
-          className="fixed bottom-8 right-8 z-30 flex !h-16 !w-16 items-center justify-center !rounded-xl !bg-[linear-gradient(135deg,#D63F4D_0%,#910322_100%)] !p-0 text-[#140001] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.45)]"
-          type="button"
-          onClick={() => setView("manager-menu")}
-          aria-label="Open menu management"
-        >
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
-            <path d="M7.5 10H0V7.5H7.5V0H10V7.5H17.5V10H10V17.5H7.5V10Z" fill="currentColor" />
-          </svg>
-        </button>
       </main>
     );
   }
@@ -2969,7 +2954,7 @@ export default function Home() {
           <p className={`font-epilogue text-4xl leading-[45px] ${valueColor}`}>{value}</p>
           {badge ? <span className={`${tone === "teal" ? "bg-[#388188]/20 text-[#8BD2DA]" : "bg-transparent text-[#8BD2DA]"} rounded-xl px-2 py-1 text-[10px] font-bold leading-6`}>{badge}</span> : null}
         </div>
-        <p className="mt-1 text-sm leading-5 text-[#E1BEBE]">{detail}</p>
+        {detail ? <p className="mt-1 text-sm leading-5 text-[#E1BEBE]">{detail}</p> : null}
       </article>
     );
   }
@@ -2990,47 +2975,50 @@ export default function Home() {
 
   function renderManagerTopMenuBarChart(rows, maxOrders) {
     const midpoint = Math.ceil(maxOrders / 2);
+    const chartWidth = Math.max(360, rows.length * 92);
     return (
-      <div className="grid h-[292px] grid-cols-[2rem_minmax(0,1fr)] gap-4">
-        <div className="flex h-56 flex-col justify-between text-right text-[10px] leading-none text-[#E1BEBE]/60">
-          <span>{maxOrders}</span>
-          <span>{midpoint}</span>
-          <span>0</span>
-        </div>
-        <div
-          className="grid h-56 items-end gap-4 border-b border-l border-[#594040]/50 pl-4"
-          style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))` }}
-        >
-          {rows.map((row) => (
-            <div
-              className="group relative flex h-full flex-col justify-end outline-none"
-              key={row.menu_id}
-              tabIndex={0}
-              title={`${row.quantity} orders`}
-              aria-label={`${row.name} has ${row.quantity} orders`}
-            >
-              <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2 rounded bg-[#D63F4D] px-3 py-1 text-[10px] font-black text-white opacity-0 shadow-[0_10px_24px_rgba(214,63,77,0.35)] transition-opacity group-hover:opacity-100 group-focus:opacity-100">
-                {row.quantity} orders
-              </div>
-              <div className="mb-2 text-center text-sm font-black leading-5 text-[#F7DCDC]">{row.quantity}</div>
+      <div className="overflow-x-auto pb-2">
+        <div className="grid h-[292px] grid-cols-[2rem_minmax(0,1fr)] gap-4" style={{ minWidth: `${chartWidth}px` }}>
+          <div className="flex h-56 flex-col justify-between text-right text-[10px] leading-none text-[#E1BEBE]/60">
+            <span>{maxOrders}</span>
+            <span>{midpoint}</span>
+            <span>0</span>
+          </div>
+          <div
+            className="grid h-56 items-end gap-4 border-b border-l border-[#594040]/50 pl-4"
+            style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(60px, 1fr))` }}
+          >
+            {rows.map((row) => (
               <div
-                className="w-full rounded-t bg-[#D63F4D] shadow-[0_0_18px_rgba(214,63,77,0.24)] transition-all duration-150 group-hover:brightness-125 group-focus:brightness-125"
-                style={{ height: `${row.percent}%` }}
-              />
-            </div>
-          ))}
-        </div>
-        <div />
-        <div
-          className="grid gap-4 pl-4 pt-3"
-          style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(0, 1fr))` }}
-        >
-          {rows.map((row) => (
-            <div className="grid gap-1 text-center" key={`${row.menu_id}-label`}>
-              <p className="line-clamp-2 text-[10px] font-bold leading-4 text-[#F7DCDC]" title={row.name}>{row.name}</p>
-              <p className="text-[9px] uppercase tracking-[0.12em] text-[#E1BEBE]/60">{row.category}</p>
-            </div>
-          ))}
+                className="group relative flex h-full flex-col justify-end outline-none"
+                key={row.menu_id}
+                tabIndex={0}
+                title={`${row.quantity} orders`}
+                aria-label={`${row.name} has ${row.quantity} orders`}
+              >
+                <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2 rounded bg-[#D63F4D] px-3 py-1 text-[10px] font-black text-white opacity-0 shadow-[0_10px_24px_rgba(214,63,77,0.35)] transition-opacity group-hover:opacity-100 group-focus:opacity-100">
+                  {row.quantity} orders
+                </div>
+                <div className="mb-2 text-center text-sm font-black leading-5 text-[#F7DCDC]">{row.quantity}</div>
+                <div
+                  className="w-full rounded-t bg-[#D63F4D] shadow-[0_0_18px_rgba(214,63,77,0.24)] transition-all duration-150 group-hover:brightness-125 group-focus:brightness-125"
+                  style={{ height: `${row.percent}%` }}
+                />
+              </div>
+            ))}
+          </div>
+          <div />
+          <div
+            className="grid gap-4 pl-4 pt-3"
+            style={{ gridTemplateColumns: `repeat(${rows.length}, minmax(60px, 1fr))` }}
+          >
+            {rows.map((row) => (
+              <div className="grid gap-1 text-center" key={`${row.menu_id}-label`}>
+                <p className="line-clamp-2 text-[10px] font-bold leading-4 text-[#F7DCDC]" title={row.name}>{row.name}</p>
+                <p className="text-[9px] uppercase tracking-[0.12em] text-[#E1BEBE]/60">{row.category}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -3104,29 +3092,12 @@ export default function Home() {
     return Number(value || 0).toLocaleString(undefined, { maximumFractionDigits: 1 });
   }
 
-  function renderManagerMenu() {
-    const activeRows = db.menu_items.filter((item) => !item.deleted_at);
-    return (
-      <div className="grid split">
-        <form className="panel form-grid" onSubmit={(event) => safe(() => handleAddMenu(event))}>
-          <h2>Add menu item</h2>
-          <label>Name<input name="name" required /></label>
-          <label>Category<select name="category_id" required>{db.menu_categories.map((category) => <option key={category.category_id} value={category.category_id}>{category.name}</option>)}</select></label>
-          <label>Description<textarea name="description" rows="3" /></label>
-          <label>Image path or URL<input name="image_url" placeholder="/menu/pork-shoulder.svg" /></label>
-          <button type="submit">Add menu</button>
-        </form>
-        <section className="panel"><h2>Active menu</h2><div className="table-wrap"><table><thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeRows.map((item) => <tr key={item.menu_id}><td>{item.image_url ? <img src={item.image_url} alt="" className="h-12 w-16 rounded object-cover" onError={(event) => { event.currentTarget.style.display = "none"; }} /> : "-"}</td><td>{item.name}</td><td>{helpers.categoryById(item.category_id)?.name}</td><td><span className={`pill ${item.is_available ? "available" : "cancelled"}`}>{item.is_available ? "available" : "hidden"}</span></td><td><div className="actions"><button type="button" onClick={() => safe(() => updateMenuAvailability(item.menu_id, !item.is_available))}>{item.is_available ? "Hide" : "Show"}</button><button className="danger" type="button" onClick={() => safe(() => softDeleteMenu(item.menu_id))}>Remove</button></div></td></tr>)}</tbody></table></div></section>
-      </div>
-    );
-  }
-
   function renderManagerInventory() {
     const ingredients = db.inventory_items.filter((item) => !item.deleted_at);
     const filteredIngredients = ingredients.filter((item) => {
       const query = inventorySearch.trim().toLowerCase();
       if (!query) return true;
-      return [item.name, inventoryCategory(item), inventorySku(item), item.unit].some((value) => String(value).toLowerCase().includes(query));
+      return [item.name, inventoryCategory(item), item.ingredient_id, item.unit].some((value) => String(value).toLowerCase().includes(query));
     });
     const lowStockCount = ingredients.filter((item) => item.quantity_on_hand > 0 && item.quantity_on_hand <= item.reorder_level).length;
     const outOfStockCount = ingredients.filter((item) => item.quantity_on_hand <= 0).length;
@@ -3167,15 +3138,7 @@ export default function Home() {
           <header className="flex h-[89px] items-center justify-between bg-[#1D1010] px-6">
             <div>
               <h2 className="font-epilogue text-2xl font-semibold leading-8 text-[#FFB3B3]">Inventory Management</h2>
-              <div className="mt-1 flex items-start gap-6">
-                {renderInventoryTab("stocks", "STOCKS")}
-                {renderInventoryTab("suppliers", "SUPPLIERS")}
-                {renderInventoryTab("purchase-orders", "PURCHASE ORDERS")}
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-medium leading-4 tracking-[0.13em] text-[#F7DCDC]">{new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(new Date())}</p>
-              <p className="text-xs leading-4 text-[#E1BEBE]">Late Night Shift</p>
+              <p className="mt-1 text-xs font-bold leading-4 tracking-[0.13em] text-[#FFB3B3]">STOCKS</p>
             </div>
           </header>
 
@@ -3185,7 +3148,7 @@ export default function Home() {
                 <div className="relative flex max-w-xl flex-1">
                   <input
                     className="!min-h-[58px] !rounded-lg !border-0 !bg-[#413131] !py-[17px] !pl-12 !pr-4 !text-base !text-[#F7DCDC] !outline-none placeholder:!text-[#E1BEBE]"
-                    placeholder="Search items, SKU..."
+                    placeholder="Search items, ingredient ID..."
                     value={inventorySearch}
                     onChange={(event) => setInventorySearch(event.target.value)}
                   />
@@ -3219,30 +3182,26 @@ export default function Home() {
                 </form>
               ) : null}
 
-              {inventoryTab === "stocks" ? (
-                <>
-                  <section className="overflow-hidden rounded-xl border border-[#594040]/30 bg-[#2A1C1C]/70">
-                    <div className="grid grid-cols-[1.35fr_0.85fr_0.75fr_0.9fr_1fr_1.35fr] items-center border-b border-[#594040] bg-[#362626] text-xs font-medium uppercase leading-4 tracking-[0.1em] text-[#E1BEBE]">
-                      <p className="px-6 py-6">Item Name</p>
-                      <p className="px-6 py-6">Category</p>
-                      <p className="px-6 py-6">SKU</p>
-                      <p className="px-6 py-6">Qty On Hand</p>
-                      <p className="px-6 py-6 text-center">Status</p>
-                      <p className="px-6 py-6 text-right">Action</p>
-                    </div>
-                    <div className="divide-y divide-[#594040]">
-                      {filteredIngredients.length ? filteredIngredients.map((item) => renderInventoryRow(item)) : <p className="px-6 py-8 text-[#E1BEBE]">No inventory items match the current search.</p>}
-                    </div>
-                  </section>
+              <section className="overflow-hidden rounded-xl border border-[#594040]/30 bg-[#2A1C1C]/70">
+                <div className="grid grid-cols-[1.25fr_0.75fr_0.8fr_0.85fr_0.9fr_1.95fr] items-center border-b border-[#594040] bg-[#362626] text-xs font-medium uppercase leading-4 tracking-[0.1em] text-[#E1BEBE]">
+                  <p className="px-6 py-6">Item Name</p>
+                  <p className="px-6 py-6">Category</p>
+                  <p className="px-6 py-6">Ingredient ID</p>
+                  <p className="px-6 py-6">Qty On Hand</p>
+                  <p className="px-6 py-6 text-center">Status</p>
+                  <p className="px-6 py-6 text-right">Action</p>
+                </div>
+                <div className="divide-y divide-[#594040]">
+                  {filteredIngredients.length ? filteredIngredients.map((item) => renderInventoryRow(item)) : <p className="px-6 py-8 text-[#E1BEBE]">No inventory items match the current search.</p>}
+                </div>
+              </section>
 
-                  <section className="grid grid-cols-4 gap-6">
-                    {renderInventoryStat("TOTAL VALUE", formatBaht(totalInventoryValue), "text-[#FFB3B3]")}
-                    {renderInventoryStat("LOW STOCK ITEMS", lowStockCount, "text-[#FFB3B3]")}
-                    {renderInventoryStat("OUT OF STOCK", outOfStockCount, "text-[#FFB4AB]")}
-                    {renderInventoryStat("ORDERS PENDING", pendingKitchenCount, "text-[#8BD2DA]")}
-                  </section>
-                </>
-              ) : renderInventoryPlaceholder(inventoryTab)}
+              <section className="grid grid-cols-4 gap-6">
+                {renderInventoryStat("TOTAL VALUE", formatBaht(totalInventoryValue), "text-[#FFB3B3]")}
+                {renderInventoryStat("LOW STOCK ITEMS", lowStockCount, "text-[#FFB3B3]")}
+                {renderInventoryStat("OUT OF STOCK", outOfStockCount, "text-[#FFB4AB]")}
+                {renderInventoryStat("ORDERS PENDING", pendingKitchenCount, "text-[#8BD2DA]")}
+              </section>
             </div>
 
             <footer className="flex items-center justify-between border-t border-[#594040] bg-[#2A1C1C] px-8 py-4">
@@ -3263,35 +3222,20 @@ export default function Home() {
     );
   }
 
-  function renderInventoryTab(tab, label) {
-    const active = inventoryTab === tab;
-    return (
-      <button
-        className={`!rounded-none !border-b-2 !bg-transparent !px-0 !pb-1 !pt-0 !text-xs !leading-4 !tracking-[0.13em] ${active ? "!border-[#D63F4D] !font-bold !text-[#FFB3B3]" : "!border-transparent !font-medium !text-[#E1BEBE]"}`}
-        type="button"
-        onClick={() => setInventoryTab(tab)}
-      >
-        {label}
-      </button>
-    );
-  }
-
   function renderInventoryRow(item) {
     const status = inventoryStatus(item);
     const quantity = inventoryDisplayQuantity(item);
-    const step = inventoryStep(item);
     const linkedMenus = menuItemsForIngredient(item.ingredient_id);
     const kioskOn = linkedMenus.length > 0 && linkedMenus.every((menu) => menu.is_available);
     const canToggle = linkedMenus.length > 0 && (kioskOn || item.quantity_on_hand > 0);
-    const nextDecrease = -Math.min(step, item.quantity_on_hand);
     return (
-      <div className="grid grid-cols-[1.35fr_0.85fr_0.75fr_0.9fr_1fr_1.35fr] items-center pr-6" key={item.ingredient_id}>
+      <div className="grid grid-cols-[1.25fr_0.75fr_0.8fr_0.85fr_0.9fr_1.95fr] items-center pr-6" key={item.ingredient_id}>
         <div className="px-6 py-6">
           <p className="text-base font-bold leading-6 text-[#F7DCDC]">{item.name}</p>
           <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E1BEBE]/60">{linkedMenus.length ? `${linkedMenus.length} iPad menu link${linkedMenus.length === 1 ? "" : "s"}` : "No iPad link"}</p>
         </div>
         <p className="px-6 py-6 text-base leading-6 text-[#E1BEBE]">{inventoryCategory(item)}</p>
-        <p className="px-6 py-6 font-mono text-sm leading-5 text-[#F7DCDC]/60">{inventorySku(item)}</p>
+        <p className="px-6 py-6 font-mono text-sm leading-5 text-[#F7DCDC]/60">{item.ingredient_id}</p>
         <div className="flex items-center gap-3 px-6 py-6">
           <p className={`text-base font-bold leading-6 ${status.key === "in" ? "text-[#F7DCDC]" : "text-[#FFB3B3]"}`}>{quantity.amount}</p>
           <p className="text-xs leading-4 text-[#E1BEBE]">{quantity.unit}</p>
@@ -3299,30 +3243,33 @@ export default function Home() {
         <div className="flex justify-center px-6 py-6">
           {renderInventoryStatusPill(status)}
         </div>
-        <div className="flex items-center justify-end gap-4">
-          <div className="flex items-center rounded bg-[#261818] p-1">
-            <button
-              className="flex !h-7 !w-7 items-center justify-center !rounded !bg-transparent !p-0 !text-[#F7DCDC] disabled:!opacity-30"
-              disabled={item.quantity_on_hand <= 0}
-              type="button"
-              onClick={() => safe(() => adjustIngredientStock(item.ingredient_id, nextDecrease))}
-              aria-label={`Decrease ${item.name}`}
+        <div className="flex items-center justify-end gap-3">
+          <form className="flex items-center gap-2" onSubmit={(event) => safe(() => handleAdjustStock(event))}>
+            <input name="ingredient_id" type="hidden" value={item.ingredient_id} />
+            <input
+              className="!h-10 !min-h-0 !w-20 !rounded !border !border-[#594040] !bg-[#261818] !px-2 !py-1 !text-right !text-sm !font-bold !text-[#F7DCDC]"
+              min="0"
+              name="quantity"
+              placeholder="Qty"
+              step={item.unit === "pcs" ? "1" : "0.01"}
+              type="number"
+              aria-label={`Stock quantity for ${item.name}`}
+            />
+            <select
+              className="!h-10 !min-h-0 !w-36 !rounded !border !border-[#594040] !bg-[#261818] !px-2 !py-1 !text-xs !font-bold !text-[#F7DCDC]"
+              defaultValue="restock"
+              name="movement_type"
+              aria-label={`Stock movement type for ${item.name}`}
             >
-              <svg width="10" height="2" viewBox="0 0 10 2" fill="none" aria-hidden="true">
-                <path d="M0 1.33333V0H9.33333V1.33333H0Z" fill="currentColor" />
-              </svg>
+              <option value="restock">Restock +</option>
+              <option value="adjustment_add">Adjust +</option>
+              <option value="adjustment_remove">Adjust -</option>
+              <option value="waste">Waste -</option>
+            </select>
+            <button className="!h-10 !rounded !bg-[#792E32] !px-3 !py-0 !text-xs !font-black !text-[#FFB3B3]" type="submit">
+              APPLY
             </button>
-            <button
-              className="flex !h-7 !w-7 items-center justify-center !rounded !bg-transparent !p-0 !text-[#F7DCDC]"
-              type="button"
-              onClick={() => safe(() => adjustIngredientStock(item.ingredient_id, step))}
-              aria-label={`Increase ${item.name}`}
-            >
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
-                <path d="M4 5.33333H0V4H4V0H5.33333V4H9.33333V5.33333H5.33333V9.33333H4V5.33333Z" fill="currentColor" />
-              </svg>
-            </button>
-          </div>
+          </form>
           <button className="flex !h-9 !w-9 items-center justify-center !rounded !bg-transparent !p-0 !text-[#F7DCDC]" type="button" onClick={() => editIngredientName(item.ingredient_id)} aria-label={`Edit ${item.name}`}>
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true">
               <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM0 18V13.75L13.2 0.575C13.4 0.391667 13.6208 0.25 13.8625 0.15C14.1042 0.05 14.3583 0 14.625 0C14.8917 0 15.15 0.05 15.4 0.15C15.65 0.25 15.8667 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7708 2.4 17.8625 2.65C17.9542 2.9 18 3.15 18 3.4C18 3.66667 17.9542 3.92083 17.8625 4.1625C17.7708 4.40417 17.625 4.625 17.425 4.825L4.25 18H0ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="currentColor" />
@@ -3372,43 +3319,6 @@ export default function Home() {
     );
   }
 
-  function renderInventoryPlaceholder(tab) {
-    const lowStockItems = db.inventory_items.filter((item) => !item.deleted_at && item.quantity_on_hand <= item.reorder_level);
-    if (tab === "suppliers") {
-      const suppliers = [
-        ["Yum Yum Beef Co.", "Beef", "Stable"],
-        ["Andaman Night Market", "Seafood", lowStockItems.some((item) => inventoryCategory(item) === "Seafood") ? "Needs reorder" : "Stable"],
-        ["Garden Collective", "Vegetables", "Stable"]
-      ];
-      return (
-        <section className="grid gap-4 rounded-xl border border-[#594040]/30 bg-[#2A1C1C]/70 p-6">
-          {suppliers.map(([name, category, status]) => (
-            <div className="flex items-center justify-between border-b border-[#594040]/30 py-4 last:border-b-0" key={name}>
-              <div>
-                <p className="text-lg font-bold text-[#F7DCDC]">{name}</p>
-                <p className="text-sm text-[#E1BEBE]">{category}</p>
-              </div>
-              <span className={`rounded-xl px-4 py-1 text-xs ${status === "Stable" ? "bg-[#2A1C1C] text-[#E1BEBE]" : "bg-[rgba(147,0,10,0.20)] text-[#FFB3B3]"}`}>{status}</span>
-            </div>
-          ))}
-        </section>
-      );
-    }
-    return (
-      <section className="grid gap-4 rounded-xl border border-[#594040]/30 bg-[#2A1C1C]/70 p-6">
-        {lowStockItems.length ? lowStockItems.map((item) => (
-          <div className="flex items-center justify-between border-b border-[#594040]/30 py-4 last:border-b-0" key={item.ingredient_id}>
-            <div>
-              <p className="text-lg font-bold text-[#F7DCDC]">{item.name}</p>
-              <p className="text-sm text-[#E1BEBE]">{inventoryDisplayQuantity(item).amount} {inventoryDisplayQuantity(item).unit} remaining</p>
-            </div>
-            <button className="!rounded-lg !bg-[#792E32] !px-5 !py-3 !font-bold !text-[#FF999A]" type="button" onClick={() => safe(() => adjustIngredientStock(item.ingredient_id, inventoryStep(item) * 10))}>REORDER +10</button>
-          </div>
-        )) : <p className="text-[#E1BEBE]">No purchase orders are needed for the current stock levels.</p>}
-      </section>
-    );
-  }
-
   function inventoryCategory(item) {
     const name = item.name.toLowerCase();
     if (name.includes("beef") || name.includes("ribeye") || name.includes("wagyu")) return "Beef";
@@ -3417,12 +3327,6 @@ export default function Home() {
     if (name.includes("cabbage") || name.includes("mushroom") || name.includes("enoki")) return "Vegetables";
     if (name.includes("tea") || name.includes("cola")) return "Drinks";
     return "Pantry";
-  }
-
-  function inventorySku(item) {
-    const prefixes = { Beef: "BF", Pork: "PK", Seafood: "SF", Vegetables: "VG", Drinks: "DR", Pantry: "PT" };
-    const number = String(item.ingredient_id.split("-").at(-1) || "0").padStart(3, "0");
-    return `NE-${prefixes[inventoryCategory(item)] || "IN"}-${number}`;
   }
 
   function inventoryStatus(item) {
@@ -3462,8 +3366,8 @@ export default function Home() {
   function exportInventoryReport() {
     const rows = db.inventory_items
       .filter((item) => !item.deleted_at)
-      .map((item) => [inventorySku(item), item.name, inventoryCategory(item), item.quantity_on_hand, item.unit, item.reorder_level, item.unit_cost, inventoryStatus(item).label]);
-    const csv = [["SKU", "Item", "Category", "Qty On Hand", "Unit", "Reorder Level", "Unit Cost", "Status"], ...rows]
+      .map((item) => [item.ingredient_id, item.name, inventoryCategory(item), item.quantity_on_hand, item.unit, item.reorder_level, item.unit_cost, inventoryStatus(item).label]);
+    const csv = [["Ingredient ID", "Item", "Category", "Qty On Hand", "Unit", "Reorder Level", "Unit Cost", "Status"], ...rows]
       .map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(","))
       .join("\n");
     const url = window.URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
@@ -3475,29 +3379,4 @@ export default function Home() {
     setNotice({ message: "Inventory report exported.", type: "success" });
   }
 
-  function renderManagerStaff() {
-    const activeUsers = db.users.filter((user) => !user.deleted_at);
-    return (
-      <div className="grid split">
-        <form className="panel form-grid" onSubmit={(event) => safe(() => handleAddUser(event))}>
-          <h2>Add staff login</h2>
-          <label>Full name<input name="full_name" required /></label>
-          <label>Username<input name="username" required /></label>
-          <label>Password<input name="password" type="password" required /></label>
-          <label>Role<select name="role"><option value="cashier">cashier</option><option value="kitchen">kitchen</option><option value="waiter">waiter</option><option value="manager">manager</option></select></label>
-          <button type="submit">Add staff</button>
-        </form>
-        <section className="panel"><h2>Staff users</h2><div className="table-wrap"><table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>{activeUsers.map((user) => <tr key={user.user_id}><td>{user.full_name}</td><td>{user.username}</td><td>{user.role}</td><td><span className={`pill ${user.is_active ? "available" : "cancelled"}`}>{user.is_active ? "active" : "inactive"}</span></td><td><button className="danger" type="button" onClick={() => softDeleteUser(user.user_id)}>Deactivate</button></td></tr>)}</tbody></table></div></section>
-      </div>
-    );
-  }
-
-  function renderRemovedList() {
-    const rows = [
-      ...db.menu_items.filter((item) => item.deleted_at).map((item) => ({ type: "menu", id: item.menu_id, name: item.name, deleted_at: item.deleted_at })),
-      ...db.inventory_items.filter((item) => item.deleted_at).map((item) => ({ type: "ingredient", id: item.ingredient_id, name: item.name, deleted_at: item.deleted_at })),
-      ...db.users.filter((user) => user.deleted_at).map((user) => ({ type: "user", id: user.user_id, name: user.full_name, deleted_at: user.deleted_at }))
-    ];
-    return <section className="panel"><h2>Soft-deleted rows</h2><div className="table-wrap"><table><thead><tr><th>Type</th><th>Name</th><th>Removed at</th><th>Action</th></tr></thead><tbody>{rows.length ? rows.map((row) => <tr key={`${row.type}-${row.id}`}><td>{row.type}</td><td>{row.name}</td><td>{shortDateTime(row.deleted_at)}</td><td><button type="button" onClick={() => safe(() => restoreRow(row.type, row.id))}>Restore</button></td></tr>) : <tr><td colSpan="4">Removed list is empty.</td></tr>}</tbody></table></div></section>;
-  }
 }

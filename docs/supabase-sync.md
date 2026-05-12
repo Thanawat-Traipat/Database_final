@@ -59,4 +59,4 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 - No `waiter_id`; several waiters can serve the same table.
 - No menu `price`; billing is based on buffet guest counts.
 - `recipes` uses `(menu_id, ingredient_id)` as the primary key.
-- `inventory_transactions.transaction_type` is limited to `usage` and `manual_adjustment`.
+- `inventory_transactions.transaction_type` is limited to `usage`, `manual_adjustment`, `waste`, and `restock`.

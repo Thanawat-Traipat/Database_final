@@ -11,7 +11,9 @@ do $$ begin create type payment_method as enum ('cash'); exception when duplicat
 do $$ begin create type order_status as enum ('open', 'completed', 'cancelled'); exception when duplicate_object then null; end $$;
 do $$ begin create type order_item_status as enum ('pending', 'cooking', 'ready', 'out_for_serving', 'served', 'cancelled'); exception when duplicate_object then null; end $$;
 do $$ begin create type priority_level as enum ('normal', 'rush'); exception when duplicate_object then null; end $$;
-do $$ begin create type transaction_type as enum ('usage', 'manual_adjustment'); exception when duplicate_object then null; end $$;
+do $$ begin create type transaction_type as enum ('usage', 'manual_adjustment', 'waste', 'restock'); exception when duplicate_object then null; end $$;
+alter type transaction_type add value if not exists 'waste';
+alter type transaction_type add value if not exists 'restock';
 
 create table if not exists app_users (
   user_id uuid primary key default gen_random_uuid(),
@@ -156,7 +158,7 @@ create table if not exists inventory_transactions (
   occurred_at timestamptz not null default now()
 );
 
-comment on table inventory_transactions is 'Stock ledger. usage rows are automatic from served food; manual_adjustment rows come from manager inventory edits.';
+comment on table inventory_transactions is 'Stock ledger. usage rows are automatic from served food; manual_adjustment rows are corrections; waste rows record lost stock; restock rows record received stock.';
 
 create index if not exists idx_dining_sessions_table_status on dining_sessions(table_code, status, opened_at desc);
 create index if not exists idx_orders_session_time on orders(session_id, ordered_at desc);

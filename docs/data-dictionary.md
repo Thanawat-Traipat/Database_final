@@ -14,7 +14,7 @@ This dictionary matches `supabase/schema.sql` and `supabase/reset-new-ux.sql`.
 | `order_status` | `open`, `completed`, `cancelled` | `orders.status` |
 | `order_item_status` | `pending`, `cooking`, `ready`, `out_for_serving`, `served`, `cancelled` | `order_items.status` |
 | `priority_level` | `normal`, `rush` | `order_items.priority_level` |
-| `transaction_type` | `usage`, `manual_adjustment` | `inventory_transactions.transaction_type` |
+| `transaction_type` | `usage`, `manual_adjustment`, `waste`, `restock` | `inventory_transactions.transaction_type` |
 
 ## `app_users`
 
@@ -180,7 +180,7 @@ Purpose: stock movement ledger.
 | `transaction_id` | `bigint` | PK, identity | Transaction identifier |
 | `ingredient_id` | `bigint` | FK `inventory_items(ingredient_id)` | Ingredient moved |
 | `order_item_id` | `bigint` | Nullable FK `order_items(order_item_id)` | Served item that caused usage |
-| `transaction_type` | `transaction_type` | Not null | `usage` or `manual_adjustment` |
+| `transaction_type` | `transaction_type` | Not null | `usage`, `manual_adjustment`, `waste`, or `restock` |
 | `quantity_change` | `numeric(12,2)` | Not null | Negative for usage, positive/negative for manual adjustment |
 | `unit_cost_snapshot` | `numeric(12,4)` | Not null, default 0 | Cost copied when movement occurs |
 | `occurred_at` | `timestamptz` | Not null, default now | Movement time |
