@@ -30,7 +30,7 @@ This guide explains how the source code, Supabase schema, and report docs fit to
 | --- | --- | --- |
 | Login / role test | `handleLogin`, `handleLogout`, `jumpToEvaluatorScreen`, `recordStaffActivity` | `app_users`, `staff_activity_logs` |
 | Cashier table flow | `makeSeatForSelectedTable`, `markSelectedTableForBilling`, `closeSession`, `cashierTableState` | `restaurant_tables`, `dining_sessions`, `payments`, `order_items` |
-| Customer iPad | `customerCategoryForItem`, `updateCartQuantity`, `placeOrder`, `callServerForCustomer` | `menu_categories`, `menu_items`, `orders`, `order_items` |
+| Customer iPad | `customerCategoryForItem`, `updateCartQuantity`, `placeOrder` | `menu_categories`, `menu_items`, `orders`, `order_items` |
 | Kitchen display | `kitchenQueueGroups`, `setOrderItemStatus`, `expediteOrderItem`, `advanceKitchenGroup` | `orders`, `order_items`, `dining_sessions`, `restaurant_tables`, `menu_items` |
 | Waiter service | `waiterServeGroups`, `markOrderItemOutForServing`, `serveOrderItem`, `advanceWaiterGroup` | `order_items`, `recipes`, `inventory_items`, `inventory_transactions` |
 | Manager dashboard | `calculateDashboardMetrics`, `renderManagerDashboard` | `payments`, `dining_sessions`, `order_items`, `menu_items`, `inventory_transactions`, `inventory_items`, `restaurant_tables` |

@@ -734,7 +734,7 @@ export default function Home() {
       if (session) setCustomerSessionId(session.session_id);
       setCustomerHistoryOpen(false);
       setView("customer");
-      setNotice({ message: "Role test opened the customer iPad.", type: "success" });
+      setNotice(null);
       return;
     }
 
@@ -907,29 +907,6 @@ export default function Home() {
       else delete nextCart[menuId];
       return nextCart;
     });
-  }
-
-  // The server call is logged against the assigned waiter so the manager dashboard can audit it.
-  function callServerForCustomer() {
-    if (!customerSessionId) {
-      setNotice({ message: "Choose an active table before calling staff.", type: "error" });
-      return;
-    }
-    mutate((nextDb) => {
-      const session = nextDb.dining_sessions.find((row) => row.session_id === customerSessionId);
-      if (!session || session.status !== "open") throw new Error("This dining session is not open.");
-      const table = nextDb.restaurant_tables.find((row) => row.table_id === session.table_id);
-      const defaultAuditUser = nextDb.users.find((user) => user.role === "waiter" && user.is_active && !user.deleted_at) || nextDb.users.find((user) => user.is_active && !user.deleted_at);
-      nextDb.staff_activity_logs ||= [];
-      nextDb.staff_activity_logs.push({
-        activity_id: nextId(nextDb, "activity"),
-        user_id: session.cashier_id || defaultAuditUser?.user_id,
-        action: "customer_call_server",
-        entity_type: "dining_session",
-        entity_id: session.session_id,
-        occurred_at: new Date().toISOString()
-      });
-    }, "Server has been notified.");
   }
 
   // Kitchen status updates store timestamps for service-speed reports.
@@ -1655,8 +1632,6 @@ export default function Home() {
             <strong>TABLES</strong>
           </button>
           <div className="cashier-rail-footer">
-            <button type="button">?</button>
-            <small>SUPPORT</small>
             <button type="button" onClick={handleLogout}>↪</button>
             <small>LOGOUT</small>
           </div>
@@ -1672,7 +1647,6 @@ export default function Home() {
             {renderCashierStat("OCCUPIED", occupiedCount, true)}
             {renderCashierStat("AVAILABLE", availableCount)}
             {renderCashierStat("BILLING", billingCount)}
-            <span className="cashier-top-icons">♧ ⚙ ◎</span>
           </div>
         </header>
 
@@ -2075,10 +2049,6 @@ export default function Home() {
             <nav>
               {CUSTOMER_CATEGORIES.map((category) => renderCustomerCategoryButton(category))}
             </nav>
-            <button className="customer-server-button" type="button" onClick={() => safe(callServerForCustomer)}>
-              <span>CALL</span>
-              <strong>SERVER</strong>
-            </button>
           </aside>
           <section className="customer-menu-content">
             {noticeBlock ? <div className="customer-notice">{noticeBlock}</div> : null}
@@ -2107,9 +2077,45 @@ export default function Home() {
     const active = category.key === customerCategory;
     return (
       <button className={`customer-category-button ${active ? "active" : ""}`} type="button" key={category.key} onClick={() => setCustomerCategory(category.key)}>
-        <span>{category.label.slice(0, 1)}</span>
+        <span>{renderCustomerCategoryIcon(category.key)}</span>
         <strong>{category.nav}</strong>
       </button>
+    );
+  }
+
+  function renderCustomerCategoryIcon(categoryKey) {
+    const iconProps = { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true" };
+    if (categoryKey === "seafood") {
+      return (
+        <svg {...iconProps}>
+          <path d="M3 12C5.7 8.7 8.7 7 12 7C15.3 7 18.3 8.7 21 12C18.3 15.3 15.3 17 12 17C8.7 17 5.7 15.3 3 12Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M4 12L1.5 9.5M4 12L1.5 14.5M15.5 8.5L20.5 5.5V18.5L15.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="9" cy="11" r="1" fill="currentColor" />
+        </svg>
+      );
+    }
+    if (categoryKey === "vegetable") {
+      return (
+        <svg {...iconProps}>
+          <path d="M5 13C5 7.8 9.2 4 16.5 3.5C17 10.8 13.2 15 8 15H5V13Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M5 21C7.2 14.7 10.8 10.6 16 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+          <path d="M9 15C10.3 17.2 12.4 18.5 15.5 18.5C17.7 18.5 19.5 17.9 21 16.7C18.9 14.5 16.5 13.4 13.8 13.4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    }
+    if (categoryKey === "drinks") {
+      return (
+        <svg {...iconProps}>
+          <path d="M5 4H19L13 11V18H17V20H7V18H11V11L5 4Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+          <path d="M8 7H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      );
+    }
+    return (
+      <svg {...iconProps}>
+        <path d="M6 21V13C4.9 12.7 4 12.1 3.4 11.2C2.8 10.3 2.5 9.3 2.5 8V3.5H4.5V8H6V3.5H8V8H9.5V3.5H11.5V8C11.5 9.3 11.2 10.3 10.6 11.2C10 12.1 9.1 12.7 8 13V21H6Z" fill="currentColor" />
+        <path d="M17 21V13H14V8C14 5.2 16.2 3 19 3V21H17Z" fill="currentColor" />
+      </svg>
     );
   }
 
@@ -2259,7 +2265,6 @@ export default function Home() {
                 <strong>{String(cancelledCount).padStart(2, "0")}</strong>
               </div>
             </div>
-            <button className="customer-history-call" type="button" onClick={() => safe(callServerForCustomer)}>CALL STAFF</button>
             <button className="customer-history-back" type="button" onClick={() => setCustomerHistoryOpen(false)}>BACK TO MENU</button>
           </aside>
         </div>

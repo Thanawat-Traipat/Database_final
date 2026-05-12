@@ -784,8 +784,7 @@ tr:last-child td {
 }
 
 .customer-menu-brand span,
-.customer-category-button strong,
-.customer-server-button strong {
+.customer-category-button strong {
   color: #e1bebe;
   font-size: 10px;
   line-height: 15px;
@@ -817,6 +816,11 @@ tr:last-child td {
   font-weight: 700;
 }
 
+.customer-category-button svg {
+  width: 24px;
+  height: 24px;
+}
+
 .customer-category-button.active {
   border: 1px solid rgba(166, 25, 46, 0.6) !important;
   color: #fff;
@@ -826,23 +830,6 @@ tr:last-child td {
 
 .customer-category-button.active strong {
   color: #fff;
-  font-weight: 800;
-}
-
-.customer-server-button {
-  display: grid;
-  justify-items: center;
-  gap: 3px;
-  width: 64px;
-  min-height: 56px;
-  border: 1px solid rgba(89, 64, 64, 0.3) !important;
-  border-radius: 8px !important;
-  background: rgba(65, 49, 49, 0.5) !important;
-}
-
-.customer-server-button span {
-  color: #e1bebe;
-  font-size: 9px;
   font-weight: 800;
 }
 
@@ -1571,7 +1558,6 @@ tr:last-child td {
   color: #f7dcdc;
 }
 
-.customer-history-call,
 .customer-history-back {
   width: 100%;
   min-height: 62px;
@@ -1581,11 +1567,6 @@ tr:last-child td {
   font-weight: 900;
   line-height: 24px;
   letter-spacing: 0.1em;
-}
-
-.customer-history-call {
-  border: 1px solid rgba(89, 64, 64, 0.24) !important;
-  background: #2a1c1c !important;
 }
 
 .customer-history-back {
@@ -2012,13 +1993,6 @@ tr:last-child td {
 
 .cashier-stat strong.accent {
   color: #a6192e;
-}
-
-.cashier-top-icons {
-  border-left: 1px solid rgba(61, 46, 46, 0.5);
-  padding-left: 28px;
-  color: #9c8e8e;
-  letter-spacing: 0.75em;
 }
 
 .cashier-main {
