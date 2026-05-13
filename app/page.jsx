@@ -1,23 +1,22 @@
 "use client";
 
-// The page is a client component because the operational screens update live in the browser.
+/*
+  app/page.jsx is the main operational interface for the class project.
+  The business records are loaded from Supabase through app/lib/supabaseDatabase.js.
+  Constants in this file are kept for UI labels, timing rules, role shortcuts, and visual grouping only.
+  Restaurant data that changes during use, such as tables, sessions, orders, menu items, recipes,
+  inventory, payments, and dashboard metrics, is read from and synced back to Supabase.
+*/
+
+// The page is a client component because the role screens update live in the browser after user actions.
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   loadDatabaseFromSupabase,
-  replaceDatabaseInSupabase,
   supabaseConfigured,
   syncDatabaseToSupabase
 } from "./lib/supabaseDatabase";
 
-// Demo credentials make the four staff login flows easy to test in class.
-const DEMO_CREDENTIALS = [
-  ["cashier", "cashier123", "Cashier"],
-  ["kitchen", "kitchen123", "Kitchen"],
-  ["waiter", "waiter123", "Waiter"],
-  ["manager", "manager123", "Manager"]
-];
-
-// Evaluator shortcuts let graders test every major role without manual re-login.
+// Evaluator shortcuts let graders test every major role without manual re-login during presentation.
 const EVALUATOR_SCREENS = [
   { key: "cashier", role: "cashier", view: "cashier-tables", label: "Cashier", username: "cashier", password: "cashier123" },
   { key: "customer", role: "customer", view: "customer", label: "Customer" },
@@ -47,7 +46,7 @@ const DEFAULT_VIEW_BY_ROLE = {
   manager: "manager-dashboard"
 };
 
-// Buffet pricing is shown directly in the cashier right rail.
+// These values are only fallbacks; live cashier pricing prefers the latest Supabase session price snapshots.
 const ADULT_BUFFET_PRICE = 399;
 const CHILD_BUFFET_PRICE = 259;
 const DINING_LIMIT_MINUTES = 90;
@@ -55,7 +54,7 @@ const CLEANING_DURATION_MINUTES = 10;
 const TIMER_TICK_MS = 1000;
 const CHECKOUT_CANCEL_STATUSES = ["pending", "cooking", "ready", "out_for_serving"];
 
-// The customer iPad menu intentionally groups the database categories into four Figma sections.
+// The customer iPad menu groups database category names into four Figma sections without hardcoding menu rows.
 const CUSTOMER_CATEGORIES = [
   {
     key: "meat",
@@ -103,162 +102,39 @@ const CUSTOMER_CATEGORIES = [
   }
 ];
 
-// Visual types keep the customer menu close to the Figma concept while names stay database-driven.
-const CUSTOMER_MENU_PRESENTATION = {
-  "menu-1": { visual: "belly" },
-  "menu-2": { visual: "shoulder" },
-  "menu-3": { visual: "beef" },
-  "menu-4": { visual: "squid" },
-  "menu-5": { visual: "shrimp" },
-  "menu-6": { visual: "greens" },
-  "menu-7": { visual: "mushroom" },
-  "menu-8": { visual: "dessert" },
-  "menu-9": { visual: "drink" },
-  "menu-10": { visual: "drink" }
+// These repairs keep older Supabase seed data compatible with the latest Yum Yum Buffet UX.
+// They only correct demo IDs/names/recipe links and intentionally do not overwrite image_url,
+// so photos uploaded through a Supabase bucket continue to display on the customer iPad.
+const CANONICAL_CATEGORY_REPAIRS = {
+  "category-5": "Sides and Drinks",
+  "category-6": "Sides and Drinks Legacy"
 };
 
-// Relative timestamps keep seed data realistic no matter when the project is opened.
-function minutesFromNow(minutes) {
-  return new Date(Date.now() + minutes * 60000).toISOString();
-}
+// Ingredient quantities are not listed here because live stock should remain whatever the manager entered.
+const CANONICAL_INGREDIENT_REPAIRS = {
+  "ingredient-1": { name: "Pork belly slices", unit: "g", reorder_level: 2200, unit_cost: 0.22 },
+  "ingredient-2": { name: "Pork shoulder slices", unit: "g", reorder_level: 2500, unit_cost: 0.18 },
+  "ingredient-3": { name: "Black pepper beef", unit: "g", reorder_level: 1500, unit_cost: 0.62 },
+  "ingredient-4": { name: "Fresh squid", unit: "g", reorder_level: 1300, unit_cost: 0.31 },
+  "ingredient-8": { name: "Kimchi fried rice mix", unit: "g", reorder_level: 1200, unit_cost: 0.08 }
+};
 
-// The seed database mirrors the Supabase tables in supabase/schema.sql.
-function createSeedDatabase() {
-  return {
-    meta: {
-      nextNumbers: {
-        user: 5,
-        category: 7,
-        menu: 11,
-        ingredient: 11,
-        session: 1010,
-        order: 1006,
-        orderItem: 1011,
-        payment: 3,
-        transaction: 7,
-        activity: 6
-      }
-    },
-    users: [
-      { user_id: "user-1", full_name: "Narin Cashier", username: "cashier", password: "cashier123", role: "cashier", is_active: true, deleted_at: null },
-      { user_id: "user-2", full_name: "Ploy Kitchen", username: "kitchen", password: "kitchen123", role: "kitchen", is_active: true, deleted_at: null },
-      { user_id: "user-3", full_name: "Mek Waiter", username: "waiter", password: "waiter123", role: "waiter", is_active: true, deleted_at: null },
-      { user_id: "user-4", full_name: "Eddy Manager", username: "manager", password: "manager123", role: "manager", is_active: true, deleted_at: null }
-    ],
-    restaurant_tables: [
-      { table_id: "01", table_code: "01", capacity: 4, status: "available" },
-      { table_id: "02", table_code: "02", capacity: 4, status: "occupied" },
-      { table_id: "03", table_code: "03", capacity: 4, status: "cleaning", cleaning_started_at: minutesFromNow(-4) },
-      { table_id: "04", table_code: "04", capacity: 4, status: "available" },
-      { table_id: "05", table_code: "05", capacity: 4, status: "billing" },
-      { table_id: "06", table_code: "06", capacity: 4, status: "occupied" },
-      { table_id: "07", table_code: "07", capacity: 4, status: "available" },
-      { table_id: "08", table_code: "08", capacity: 4, status: "available" },
-      { table_id: "09", table_code: "09", capacity: 4, status: "occupied" },
-      { table_id: "10", table_code: "10", capacity: 4, status: "available" },
-      { table_id: "11", table_code: "11", capacity: 4, status: "occupied" },
-      { table_id: "12", table_code: "12", capacity: 4, status: "available" },
-      { table_id: "13", table_code: "13", capacity: 4, status: "occupied" },
-      { table_id: "14", table_code: "14", capacity: 4, status: "available" },
-      { table_id: "15", table_code: "15", capacity: 4, status: "billing" }
-    ],
-    menu_categories: [
-      { category_id: "category-1", name: "Pork" },
-      { category_id: "category-2", name: "Beef" },
-      { category_id: "category-3", name: "Seafood" },
-      { category_id: "category-4", name: "Vegetables" },
-      { category_id: "category-5", name: "Sides and Drinks" },
-      { category_id: "category-6", name: "Sides and Drinks" }
-    ],
-    menu_items: [
-      { menu_id: "menu-1", category_id: "category-1", name: "Marinated Pork Belly", description: "Soy-garlic pork belly tray", image_url: "/menu/pork-belly.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-2", category_id: "category-1", name: "Premium Pork Shoulder", description: "120 g shabu pork shoulder tray", image_url: "/menu/pork-shoulder.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-3", category_id: "category-2", name: "Black Pepper Beef", description: "Pepper-crusted premium beef tray", image_url: "/menu/black-pepper-beef.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-4", category_id: "category-3", name: "Fresh Squid", description: "Cleaned squid portion", image_url: "/menu/squid.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-5", category_id: "category-3", name: "White shrimp", description: "Six shrimp per plate", image_url: "/menu/shrimp.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-6", category_id: "category-4", name: "Napa cabbage", description: "Fresh vegetable basket", image_url: "/menu/napa-cabbage.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-7", category_id: "category-4", name: "Enoki mushroom", description: "Mushroom portion", image_url: "/menu/enoki.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-8", category_id: "category-5", name: "Kimchi fried rice", description: "Small rice bowl", image_url: "/menu/kimchi-rice.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-9", category_id: "category-6", name: "Thai iced tea", description: "Refill drink glass", image_url: "/menu/thai-tea.svg", is_available: true, deleted_at: null },
-      { menu_id: "menu-10", category_id: "category-6", name: "Cola", description: "Refill drink glass", image_url: "/menu/cola.svg", is_available: false, deleted_at: minutesFromNow(-1440) }
-    ],
-    inventory_items: [
-      { ingredient_id: "ingredient-1", name: "Pork belly slices", unit: "g", quantity_on_hand: 7600, reorder_level: 2200, unit_cost: 0.22, deleted_at: null },
-      { ingredient_id: "ingredient-2", name: "Pork shoulder slices", unit: "g", quantity_on_hand: 9200, reorder_level: 2500, unit_cost: 0.18, deleted_at: null },
-      { ingredient_id: "ingredient-3", name: "Black pepper beef", unit: "g", quantity_on_hand: 1800, reorder_level: 1500, unit_cost: 0.62, deleted_at: null },
-      { ingredient_id: "ingredient-4", name: "Fresh squid", unit: "g", quantity_on_hand: 2600, reorder_level: 1300, unit_cost: 0.31, deleted_at: null },
-      { ingredient_id: "ingredient-5", name: "White shrimp", unit: "pcs", quantity_on_hand: 48, reorder_level: 60, unit_cost: 5.2, deleted_at: null },
-      { ingredient_id: "ingredient-6", name: "Napa cabbage", unit: "g", quantity_on_hand: 4200, reorder_level: 1800, unit_cost: 0.05, deleted_at: null },
-      { ingredient_id: "ingredient-7", name: "Enoki mushroom", unit: "g", quantity_on_hand: 1600, reorder_level: 900, unit_cost: 0.11, deleted_at: null },
-      { ingredient_id: "ingredient-8", name: "Kimchi fried rice mix", unit: "g", quantity_on_hand: 5400, reorder_level: 1200, unit_cost: 0.08, deleted_at: null },
-      { ingredient_id: "ingredient-9", name: "Thai tea concentrate", unit: "ml", quantity_on_hand: 2100, reorder_level: 800, unit_cost: 0.09, deleted_at: null },
-      { ingredient_id: "ingredient-10", name: "Cola syrup", unit: "ml", quantity_on_hand: 0, reorder_level: 900, unit_cost: 0.07, deleted_at: minutesFromNow(-1440) }
-    ],
-    recipes: [
-      { menu_id: "menu-1", ingredient_id: "ingredient-1", quantity_used: 120 },
-      { menu_id: "menu-2", ingredient_id: "ingredient-2", quantity_used: 120 },
-      { menu_id: "menu-3", ingredient_id: "ingredient-3", quantity_used: 100 },
-      { menu_id: "menu-4", ingredient_id: "ingredient-4", quantity_used: 120 },
-      { menu_id: "menu-5", ingredient_id: "ingredient-5", quantity_used: 6 },
-      { menu_id: "menu-6", ingredient_id: "ingredient-6", quantity_used: 150 },
-      { menu_id: "menu-7", ingredient_id: "ingredient-7", quantity_used: 100 },
-      { menu_id: "menu-8", ingredient_id: "ingredient-8", quantity_used: 180 },
-      { menu_id: "menu-9", ingredient_id: "ingredient-9", quantity_used: 80 },
-      { menu_id: "menu-10", ingredient_id: "ingredient-10", quantity_used: 70 }
-    ],
-    dining_sessions: [
-      { session_id: "session-1001", table_id: "02", cashier_id: "user-1", adult_count: 3, child_count: 1, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-60), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
-      { session_id: "session-1002", table_id: "05", cashier_id: "user-1", adult_count: 2, child_count: 1, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-105), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-5) },
-      { session_id: "session-1003", table_id: "06", cashier_id: "user-1", adult_count: 2, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-23), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
-      { session_id: "session-1004", table_id: "09", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-72), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
-      { session_id: "session-1005", table_id: "11", cashier_id: "user-1", adult_count: 2, child_count: 2, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-45), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
-      { session_id: "session-1006", table_id: "13", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-68), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: null },
-      { session_id: "session-1007", table_id: "15", cashier_id: "user-1", adult_count: 4, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-94), closed_at: null, status: "open", payment_status: "unpaid", bill_requested_at: minutesFromNow(-3) },
-      { session_id: "session-1008", table_id: "04", cashier_id: "user-1", adult_count: 2, child_count: 0, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-260), closed_at: minutesFromNow(-155), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-160) },
-      { session_id: "session-1009", table_id: "12", cashier_id: "user-1", adult_count: 2, child_count: 2, adult_price_snapshot: 399, child_price_snapshot: 259, opened_at: minutesFromNow(-1380), closed_at: minutesFromNow(-1285), status: "closed", payment_status: "paid", bill_requested_at: minutesFromNow(-1290) }
-    ],
-    orders: [
-      { order_id: "order-1001", session_id: "session-1001", ordered_at: minutesFromNow(-36), status: "open" },
-      { order_id: "order-1002", session_id: "session-1001", ordered_at: minutesFromNow(-15), status: "open" },
-      { order_id: "order-1003", session_id: "session-1002", ordered_at: minutesFromNow(-240), status: "completed" },
-      { order_id: "order-1004", session_id: "session-1003", ordered_at: minutesFromNow(-1360), status: "completed" },
-      { order_id: "order-1005", session_id: "session-1003", ordered_at: minutesFromNow(-1342), status: "completed" }
-    ],
-    order_items: [
-      { order_item_id: "orderItem-1001", order_id: "order-1001", menu_id: "menu-1", quantity: 2, status: "cooking", special_instructions: "Thin slice, no spicy sauce", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-31), ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1002", order_id: "order-1001", menu_id: "menu-6", quantity: 1, status: "ready", special_instructions: "Extra fresh basket", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-36), cooking_at: minutesFromNow(-32), ready_at: minutesFromNow(-27), out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1003", order_id: "order-1002", menu_id: "menu-3", quantity: 1, status: "pending", special_instructions: "Chef priority for premium add-on", priority_level: "rush", expedited_at: minutesFromNow(-8), requested_at: minutesFromNow(-24), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1004", order_id: "order-1002", menu_id: "menu-5", quantity: 2, status: "pending", special_instructions: "Serve chilled", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-15), cooking_at: null, ready_at: null, out_for_serving_at: null, served_at: null, cancelled_at: null },
-      { order_item_id: "orderItem-1005", order_id: "order-1003", menu_id: "menu-1", quantity: 3, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-235), ready_at: minutesFromNow(-230), out_for_serving_at: minutesFromNow(-228), served_at: minutesFromNow(-226), cancelled_at: null },
-      { order_item_id: "orderItem-1006", order_id: "order-1003", menu_id: "menu-8", quantity: 2, status: "served", special_instructions: "Less spicy", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-240), cooking_at: minutesFromNow(-234), ready_at: minutesFromNow(-229), out_for_serving_at: minutesFromNow(-227), served_at: minutesFromNow(-225), cancelled_at: null },
-      { order_item_id: "orderItem-1007", order_id: "order-1004", menu_id: "menu-2", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1354), ready_at: minutesFromNow(-1348), out_for_serving_at: minutesFromNow(-1347), served_at: minutesFromNow(-1345), cancelled_at: null },
-      { order_item_id: "orderItem-1008", order_id: "order-1004", menu_id: "menu-4", quantity: 2, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1360), cooking_at: minutesFromNow(-1355), ready_at: minutesFromNow(-1349), out_for_serving_at: minutesFromNow(-1348), served_at: minutesFromNow(-1346), cancelled_at: null },
-      { order_item_id: "orderItem-1009", order_id: "order-1005", menu_id: "menu-5", quantity: 3, status: "served", special_instructions: "Extra sauce", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1338), ready_at: minutesFromNow(-1332), out_for_serving_at: minutesFromNow(-1330), served_at: minutesFromNow(-1328), cancelled_at: null },
-      { order_item_id: "orderItem-1010", order_id: "order-1005", menu_id: "menu-9", quantity: 4, status: "served", special_instructions: "", priority_level: "normal", expedited_at: null, requested_at: minutesFromNow(-1342), cooking_at: minutesFromNow(-1339), ready_at: minutesFromNow(-1335), out_for_serving_at: minutesFromNow(-1333), served_at: minutesFromNow(-1331), cancelled_at: null }
-    ],
-    payments: [
-      { payment_id: "payment-1", session_id: "session-1008", cashier_id: "user-1", method: "cash", paid_amount: 798, paid_at: minutesFromNow(-155), status: "paid" },
-      { payment_id: "payment-2", session_id: "session-1009", cashier_id: "user-1", method: "cash", paid_amount: 2114, paid_at: minutesFromNow(-1285), status: "paid" }
-    ],
-    staff_activity_logs: [
-      { activity_id: "activity-1", user_id: "user-1", action: "open_table", entity_type: "dining_session", entity_id: "session-1008", occurred_at: minutesFromNow(-260) },
-      { activity_id: "activity-2", user_id: "user-1", action: "checkout_paid", entity_type: "payment", entity_id: "payment-1", occurred_at: minutesFromNow(-155) },
-      { activity_id: "activity-3", user_id: "user-3", action: "serve_item", entity_type: "order_item", entity_id: "orderItem-1005", occurred_at: minutesFromNow(-226) },
-      { activity_id: "activity-4", user_id: "user-2", action: "start_preparing", entity_type: "order_item", entity_id: "orderItem-1001", occurred_at: minutesFromNow(-31) },
-      { activity_id: "activity-5", user_id: "user-2", action: "expedite_order", entity_type: "order_item", entity_id: "orderItem-1003", occurred_at: minutesFromNow(-8) }
-    ],
-    inventory_transactions: [
-      { transaction_id: "transaction-1", ingredient_id: "ingredient-1", order_item_id: "orderItem-1005", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.22, occurred_at: minutesFromNow(-226) },
-      { transaction_id: "transaction-2", ingredient_id: "ingredient-8", order_item_id: "orderItem-1006", transaction_type: "usage", quantity_change: -360, unit_cost_snapshot: 0.08, occurred_at: minutesFromNow(-225) },
-      { transaction_id: "transaction-3", ingredient_id: "ingredient-2", order_item_id: "orderItem-1007", transaction_type: "usage", quantity_change: -480, unit_cost_snapshot: 0.18, occurred_at: minutesFromNow(-1345) },
-      { transaction_id: "transaction-4", ingredient_id: "ingredient-4", order_item_id: "orderItem-1008", transaction_type: "usage", quantity_change: -240, unit_cost_snapshot: 0.31, occurred_at: minutesFromNow(-1346) },
-      { transaction_id: "transaction-5", ingredient_id: "ingredient-5", order_item_id: "orderItem-1009", transaction_type: "usage", quantity_change: -18, unit_cost_snapshot: 5.2, occurred_at: minutesFromNow(-1328) },
-      { transaction_id: "transaction-6", ingredient_id: "ingredient-9", order_item_id: "orderItem-1010", transaction_type: "usage", quantity_change: -320, unit_cost_snapshot: 0.09, occurred_at: minutesFromNow(-1331) }
-    ]
-  };
-}
+// Recipes are the bridge used by the inventory toggle, so each demo menu must point at the matching ingredient.
+const CANONICAL_RECIPE_REPAIRS = [
+  ["menu-1", "ingredient-1", 120],
+  ["menu-2", "ingredient-2", 120],
+  ["menu-3", "ingredient-3", 100],
+  ["menu-4", "ingredient-4", 120],
+  ["menu-5", "ingredient-5", 6],
+  ["menu-6", "ingredient-6", 150],
+  ["menu-7", "ingredient-7", 100],
+  ["menu-8", "ingredient-8", 180],
+  ["menu-9", "ingredient-9", 80],
+  ["menu-10", "ingredient-10", 70]
+];
 
-// Supabase is the only source of truth for the submitted class project.
+// Supabase is the required source of truth for all business data.
+// If these tables are empty, run supabase/reset-new-ux.sql in the Supabase SQL editor instead of seeding from the UI.
 async function loadInitialDatabase() {
   if (!supabaseConfigured) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Supabase is required.");
@@ -269,16 +145,55 @@ async function loadInitialDatabase() {
     !loaded.restaurant_tables?.length ||
     !loaded.menu_items?.length;
 
-  if (!missingCoreSeedData) return loaded;
+  if (missingCoreSeedData) {
+    throw new Error("Supabase connected, but required demo data is missing. Run supabase/reset-new-ux.sql in Supabase SQL Editor.");
+  }
 
-  const seeded = normalizeDatabase(createSeedDatabase());
-  seeded.meta = {
-    ...(seeded.meta || {}),
-    storageMode: "supabase",
-    bootstrappedAt: new Date().toISOString()
-  };
-  await replaceDatabaseInSupabase(seeded);
-  return seeded;
+  return loaded;
+}
+
+// Older seed files used separate Snacks/Drinks categories and mismatched recipe ingredients.
+// This makes the loaded database agree with the current UI while preserving manager-entered stock and image URLs.
+function repairMenuInventoryDemoLinks(database) {
+  database.menu_categories = database.menu_categories || [];
+  database.inventory_items = database.inventory_items || [];
+  database.menu_items = database.menu_items || [];
+  database.recipes = database.recipes || [];
+
+  const categoryById = new Map(database.menu_categories.map((category) => [category.category_id, category]));
+  Object.entries(CANONICAL_CATEGORY_REPAIRS).forEach(([categoryId, name]) => {
+    const category = categoryById.get(categoryId);
+    if (category) category.name = name;
+  });
+
+  database.menu_items.forEach((menu) => {
+    if (["menu-8", "menu-9", "menu-10"].includes(menu.menu_id)) menu.category_id = "category-5";
+  });
+
+  const ingredientById = new Map(database.inventory_items.map((ingredient) => [ingredient.ingredient_id, ingredient]));
+  Object.entries(CANONICAL_INGREDIENT_REPAIRS).forEach(([ingredientId, patch]) => {
+    const ingredient = ingredientById.get(ingredientId);
+    if (ingredient) Object.assign(ingredient, patch);
+  });
+
+  const repairedMenuIds = new Set(CANONICAL_RECIPE_REPAIRS.map(([menuId]) => menuId));
+  database.recipes = database.recipes.filter((recipe) => !repairedMenuIds.has(recipe.menu_id));
+  CANONICAL_RECIPE_REPAIRS.forEach(([menu_id, ingredient_id, quantity_used]) => {
+    if (ingredientById.has(ingredient_id)) database.recipes.push({ menu_id, ingredient_id, quantity_used });
+  });
+
+  database.menu_items.forEach((menu) => {
+    if (menu.deleted_at) {
+      menu.is_available = false;
+      return;
+    }
+    const menuRecipes = database.recipes.filter((recipe) => recipe.menu_id === menu.menu_id);
+    const hasUnavailableIngredient = menuRecipes.some((recipe) => {
+      const ingredient = ingredientById.get(recipe.ingredient_id);
+      return !ingredient || ingredient.deleted_at || Number(ingredient.quantity_on_hand || 0) <= 0;
+    });
+    if (hasUnavailableIngredient) menu.is_available = false;
+  });
 }
 
 // Database rows are normalized when the project flow changes.
@@ -299,6 +214,7 @@ function normalizeDatabase(database) {
     nextSession.adult_count = Math.max(0, 4 - nextSession.child_count);
     return nextSession;
   });
+  repairMenuInventoryDemoLinks(database);
   return database;
 }
 
@@ -405,7 +321,7 @@ export default function Home() {
   }, []);
 
   // Persisting every committed write keeps the UI local-fast and Supabase-synced.
-  function commit(nextDb, message, type = "success", options = {}) {
+  function commit(nextDb, message, type = "success") {
     const normalizedDb = normalizeDatabase(nextDb);
     normalizedDb.meta = {
       ...(normalizedDb.meta || {}),
@@ -414,8 +330,7 @@ export default function Home() {
     };
     setDb(normalizedDb);
     if (message) setNotice({ message, type });
-    const writer = options.replaceSupabase ? replaceDatabaseInSupabase : syncDatabaseToSupabase;
-    writer(normalizedDb)
+    syncDatabaseToSupabase(normalizedDb)
       .then(() => {
         if (message) setNotice({ message: `${message} Synced to Supabase.`, type });
       })
@@ -519,6 +434,17 @@ export default function Home() {
     return session.adult_count * adultPrice + session.child_count * childPrice;
   }
 
+  // New cashier sessions reuse the latest Supabase price snapshot so the UI is not fixed to only code constants.
+  function currentBuffetPrices(sourceDb = db) {
+    const latestSessionWithPrice = [...(sourceDb.dining_sessions || [])]
+      .filter((session) => session.adult_price_snapshot != null && session.child_price_snapshot != null)
+      .sort((a, b) => new Date(b.opened_at || 0).getTime() - new Date(a.opened_at || 0).getTime())[0];
+    return {
+      adult: latestSessionWithPrice?.adult_price_snapshot ?? ADULT_BUFFET_PRICE,
+      child: latestSessionWithPrice?.child_price_snapshot ?? CHILD_BUFFET_PRICE
+    };
+  }
+
   // Guest count is reused by cashier and dashboard screens.
   function sessionGuests(session) {
     return session.adult_count + session.child_count;
@@ -536,13 +462,12 @@ export default function Home() {
     );
   }
 
-  // Presentation keeps visual style separate from menu names stored in Supabase.
+  // Presentation keeps the UI card shape separate from menu names stored in Supabase.
   function customerMenuPresentation(item) {
-    const presentation = CUSTOMER_MENU_PRESENTATION[item.menu_id] || {};
     return {
       ...item,
       displayName: item.name,
-      visual: presentation.visual || customerCategoryForItem(item).fallbackVisual
+      visual: customerCategoryForItem(item).fallbackVisual
     };
   }
 
@@ -736,7 +661,7 @@ export default function Home() {
     setView("login");
   }
 
-  // Role test shortcuts authenticate seeded demo users so grading still exercises the login data model.
+  // Role test shortcuts authenticate Supabase demo users so grading still exercises the login data model.
   function jumpToEvaluatorScreen(screen) {
     if (screen.role === "customer") {
       const session = db.dining_sessions.find((row) => row.status === "open") || db.dining_sessions[0];
@@ -822,14 +747,15 @@ export default function Home() {
       if (checkInAdults + checkInChildren <= 0) throw new Error("A session needs at least one guest.");
       if (checkInAdults + checkInChildren > nextTable.capacity) throw new Error(`Table capacity is ${nextTable.capacity} guests.`);
       const sessionId = nextId(nextDb, "session");
+      const buffetPrices = currentBuffetPrices(nextDb);
       nextDb.dining_sessions.push({
         session_id: sessionId,
         table_id: nextTable.table_id,
         cashier_id: currentUser.user_id,
         adult_count: checkInAdults,
         child_count: checkInChildren,
-        adult_price_snapshot: ADULT_BUFFET_PRICE,
-        child_price_snapshot: CHILD_BUFFET_PRICE,
+        adult_price_snapshot: buffetPrices.adult,
+        child_price_snapshot: buffetPrices.child,
         opened_at: new Date().toISOString(),
         closed_at: null,
         status: "open",
@@ -1018,15 +944,19 @@ export default function Home() {
   }
 
   function menuItemsForIngredient(ingredientId, sourceDb = db) {
+    // Recipes are the bridge table between ingredients and customer menu items.
     const menuIds = new Set(sourceDb.recipes.filter((recipe) => recipe.ingredient_id === ingredientId).map((recipe) => recipe.menu_id));
+    // Deleted menu items stay hidden even if an inventory item is toggled back on.
     return sourceDb.menu_items.filter((item) => menuIds.has(item.menu_id) && !item.deleted_at);
   }
 
   function syncMenuAvailabilityForStock(nextDb, ingredientId) {
+    // When stock changes, find every menu item that depends on the edited ingredient.
     const affectedMenuIds = new Set(nextDb.recipes.filter((recipe) => recipe.ingredient_id === ingredientId).map((recipe) => recipe.menu_id));
     affectedMenuIds.forEach((menuId) => {
       const menu = nextDb.menu_items.find((item) => item.menu_id === menuId);
       if (!menu || menu.deleted_at) return;
+      // A menu is unavailable if any of its recipe ingredients is deleted or completely out of stock.
       const menuRecipes = nextDb.recipes.filter((recipe) => recipe.menu_id === menuId);
       const hasOutOfStockIngredient = menuRecipes.some((recipe) => {
         const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === recipe.ingredient_id);
@@ -1038,32 +968,40 @@ export default function Home() {
 
   function setIngredientKioskAvailability(ingredientId, isAvailable) {
     mutate((nextDb) => {
+      // The inventory toggle starts from an ingredient row because the manager thinks in stock items.
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === ingredientId);
       if (!ingredient) throw new Error("Ingredient not found.");
       if (isAvailable && ingredient.quantity_on_hand <= 0) throw new Error("Restock this ingredient before showing linked iPad menu items.");
+      // The recipe table tells us which menu rows must disappear from or return to the customer iPad.
       const affectedMenus = menuItemsForIngredient(ingredientId, nextDb);
       if (!affectedMenus.length) throw new Error("No customer iPad menu items are linked to this ingredient.");
+      const affectedMenuNames = affectedMenus.map((menu) => menu.name).join(", ");
+      // This is the key requirement: turning the inventory toggle off writes is_available=false to menu_items.
       affectedMenus.forEach((menu) => {
         menu.is_available = isAvailable;
       });
       if (isAvailable) {
+        // Re-enabling one ingredient still respects other out-of-stock ingredients in the same recipe.
         affectedMenus.forEach((menu) => {
           nextDb.recipes
             .filter((recipe) => recipe.menu_id === menu.menu_id)
             .forEach((recipe) => syncMenuAvailabilityForStock(nextDb, recipe.ingredient_id));
         });
       }
-      recordStaffActivity(nextDb, "toggle_kiosk_menu_from_inventory", "inventory_item", ingredientId, `${ingredient.name} linked iPad menu availability set to ${isAvailable}`);
+      // The activity log proves the update happened through the manager interface.
+      recordStaffActivity(nextDb, "toggle_kiosk_menu_from_inventory", "inventory_item", ingredientId, `${ingredient.name} linked iPad menu availability set to ${isAvailable} for ${affectedMenuNames}`);
     }, isAvailable ? "Linked iPad menu items are visible." : "Linked iPad menu items hidden from customer iPad.");
   }
 
   function adjustIngredientStock(ingredientId, delta, transactionType = delta >= 0 ? "restock" : "manual_adjustment") {
     mutate((nextDb) => {
+      // Quantity changes are stored on inventory_items for the current stock balance.
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === ingredientId);
       if (!ingredient) throw new Error("Ingredient not found.");
       const nextQuantity = Number((ingredient.quantity_on_hand + delta).toFixed(2));
       if (nextQuantity < 0) throw new Error("Stock movement would make inventory negative.");
       ingredient.quantity_on_hand = nextQuantity;
+      // Every manual stock movement creates an inventory_transactions audit row.
       nextDb.inventory_transactions.push({
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
@@ -1073,6 +1011,7 @@ export default function Home() {
         unit_cost_snapshot: ingredient.unit_cost,
         occurred_at: new Date().toISOString()
       });
+      // If stock reaches zero, linked iPad menu items are automatically hidden.
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
       recordStaffActivity(nextDb, "quick_stock_adjustment", "inventory_item", ingredient.ingredient_id, `${transactionType}: ${delta >= 0 ? "+" : ""}${delta} ${ingredient.unit}`);
     }, "Stock quantity updated.");
@@ -1097,17 +1036,24 @@ export default function Home() {
   }
 
   function handleAdjustStock(event) {
+    // The inventory form submits a quantity and a movement type instead of using a hardcoded +/- one unit change.
     event.preventDefault();
+    // FormData gives the ingredient id, movement quantity, and transaction type chosen by the manager.
     const form = Object.fromEntries(new FormData(event.currentTarget));
     mutate((nextDb) => {
+      // Inventory rows are loaded from Supabase and edited in the normalized React copy.
       const ingredient = nextDb.inventory_items.find((row) => row.ingredient_id === form.ingredient_id);
       if (!ingredient) throw new Error("Ingredient not found.");
+      // The quantity is always treated as a positive input; the movement type decides whether it adds or subtracts.
       const quantity = Math.abs(Number(form.quantity || 0));
       if (!quantity) throw new Error("Enter a stock movement quantity.");
+      // stockMovementFromType maps the UI choice to the enum stored in inventory_transactions.
       const movement = stockMovementFromType(form.movement_type, quantity);
       const signedQuantity = movement.quantity_change;
       if (ingredient.quantity_on_hand + signedQuantity < 0) throw new Error("Stock movement would make inventory negative.");
+      // The current balance is updated on inventory_items so dashboard and inventory views show the latest stock.
       ingredient.quantity_on_hand = Number((ingredient.quantity_on_hand + signedQuantity).toFixed(2));
+      // The transaction row is inserted so the database keeps a history of restock, adjustment, and waste events.
       nextDb.inventory_transactions.push({
         transaction_id: nextId(nextDb, "transaction"),
         ingredient_id: ingredient.ingredient_id,
@@ -1117,7 +1063,9 @@ export default function Home() {
         unit_cost_snapshot: ingredient.unit_cost,
         occurred_at: new Date().toISOString()
       });
+      // After stock changes, any menu item whose recipe now has zero stock is hidden from the customer iPad.
       syncMenuAvailabilityForStock(nextDb, ingredient.ingredient_id);
+      // Activity logs make the manager action traceable for the database management report.
       recordStaffActivity(nextDb, "record_stock_movement", "inventory_item", ingredient.ingredient_id, `${movement.label}: ${signedQuantity >= 0 ? "+" : ""}${signedQuantity} ${ingredient.unit}`);
     }, "Stock movement recorded.");
     event.currentTarget.reset();
@@ -1181,19 +1129,6 @@ export default function Home() {
       if (type === "user") row.is_active = true;
       recordStaffActivity(nextDb, "restore_removed_row", type, id, `Restored ${type} row`);
     }, "Row restored.");
-  }
-
-  function resetDemo() {
-    const nextDb = createSeedDatabase();
-    commit(nextDb, "Demo data reset.", "success", { replaceSupabase: true });
-    setCart({});
-    setCustomerSessionId(nextDb.dining_sessions.find((session) => session.status === "open")?.session_id || "");
-    setSelectedCashierTableId(nextDb.restaurant_tables.find((table) => table.table_code === "01")?.table_id || nextDb.restaurant_tables[0]?.table_id || "");
-    setCheckInAdults(4);
-    setCheckInChildren(0);
-    setCustomerCategory("meat");
-    setCustomerHistoryFilter("preparing");
-    setCustomerHistoryOpen(false);
   }
 
   // Mutations can throw validation errors; this wrapper turns them into notices.
@@ -1782,7 +1717,8 @@ export default function Home() {
   }
 
   function renderCashierCheckInPanel(table) {
-    const total = checkInAdults * ADULT_BUFFET_PRICE + checkInChildren * CHILD_BUFFET_PRICE;
+    const buffetPrices = currentBuffetPrices();
+    const total = checkInAdults * buffetPrices.adult + checkInChildren * buffetPrices.child;
     const guestCount = checkInAdults + checkInChildren;
     const canAddGuest = guestCount < table.capacity;
     return (
@@ -1792,8 +1728,8 @@ export default function Home() {
           <button type="button" onClick={() => setSelectedCashierTableId("")}>×</button>
         </div>
         <div className="cashier-side-body checkin">
-          {renderGuestCounter("Adult", ADULT_BUFFET_PRICE, checkInAdults, setCheckInAdults, canAddGuest)}
-          {renderGuestCounter("Child", CHILD_BUFFET_PRICE, checkInChildren, setCheckInChildren, canAddGuest)}
+          {renderGuestCounter("Adult", buffetPrices.adult, checkInAdults, setCheckInAdults, canAddGuest)}
+          {renderGuestCounter("Child", buffetPrices.child, checkInChildren, setCheckInChildren, canAddGuest)}
           <div className="cashier-estimate">
             <span>{guestCount}/{table.capacity} GUESTS · TOTAL ESTIMATE</span>
             <strong>{total} THB</strong>
@@ -1940,7 +1876,6 @@ export default function Home() {
             <span className="eyebrow">Yum Yum Buffet</span>
             <strong>{currentUser.full_name}</strong>
             <span className="pill available">{currentUser.role}</span>
-            {currentShift ? <span className="meta">Clocked in {shortDateTime(currentShift.clock_in_at)} - {currentShift.station}</span> : null}
           </div>
           <nav className="nav-list">
             {navigation.map(([targetView, label]) => (
@@ -1951,7 +1886,6 @@ export default function Home() {
           </nav>
           <div className="sidebar-actions">
             <button className="secondary" type="button" onClick={() => setView("customer")}>Customer QR demo</button>
-            <button className="ghost" type="button" onClick={resetDemo}>Reset demo data</button>
             <button className="danger" type="button" onClick={handleLogout}>Logout</button>
           </div>
         </aside>
@@ -1996,6 +1930,7 @@ export default function Home() {
 
   function renderCashierOpen() {
     const availableTables = db.restaurant_tables.filter((table) => table.status === "available");
+    const buffetPrices = currentBuffetPrices();
     return (
       <div className="grid split">
         <form className="panel form-grid two" onSubmit={(event) => safe(() => handleOpenTable(event))}>
@@ -2003,8 +1938,8 @@ export default function Home() {
           <label>Table<select name="table_id" required>{availableTables.map((table) => <option key={table.table_id} value={table.table_id}>Table {table.table_code} ({table.capacity} seats)</option>)}</select></label>
           <label>Adult guests<input name="adult_count" type="number" min="0" defaultValue="2" required /></label>
           <label>Child guests<input name="child_count" type="number" min="0" defaultValue="0" required /></label>
-          <label>Adult price snapshot<input name="adult_price_snapshot" type="number" min="0" defaultValue="399" required /></label>
-          <label>Child price snapshot<input name="child_price_snapshot" type="number" min="0" defaultValue="259" required /></label>
+          <label>Adult price snapshot<input name="adult_price_snapshot" type="number" min="0" defaultValue={buffetPrices.adult} required /></label>
+          <label>Child price snapshot<input name="child_price_snapshot" type="number" min="0" defaultValue={buffetPrices.child} required /></label>
           <button type="submit">Open table</button>
         </form>
         <section className="panel">
@@ -2052,10 +1987,14 @@ export default function Home() {
   }
 
   function renderCustomerMode() {
+    // The customer iPad starts from open dining sessions loaded from Supabase.
     const sessions = db.dining_sessions.filter((session) => session.status === "open");
+    // The selected session tells the order which table/session it belongs to.
     const selectedSession = helpers.sessionById(customerSessionId) || sessions[0] || null;
     const selectedTable = selectedSession ? helpers.tableById(selectedSession.table_id) : null;
+    // The active category is UI grouping only; the menu rows themselves come from Supabase.
     const activeCategory = CUSTOMER_CATEGORIES.find((category) => category.key === customerCategory) || CUSTOMER_CATEGORIES[0];
+    // Customer cards are database-driven: unavailable or soft-deleted menu_items never appear here.
     const activeMenu = db.menu_items
       .filter((item) => item.is_available && !item.deleted_at && customerCategoryForItem(item).key === activeCategory.key)
       .map((item) => customerMenuPresentation(item));
@@ -2170,7 +2109,9 @@ export default function Home() {
   }
 
   function renderCustomerFoodVisual(item) {
+    // Supabase menu_items.image_url is used first; the CSS illustration only appears when the database URL is empty or fails.
     const visualClass = item.visual || customerCategoryForItem(item).key;
+    // Trimming prevents accidental spaces in Supabase from breaking the image request.
     const imageUrl = item.image_url?.trim();
 
     return (
@@ -2183,6 +2124,7 @@ export default function Home() {
             decoding="async"
             referrerPolicy="no-referrer"
             onError={(event) => {
+              // If a Supabase bucket URL is wrong/private, hide the broken image and let the fallback drawing show.
               event.currentTarget.style.display = "none";
               event.currentTarget.parentElement?.classList.add("image-error");
             }}
@@ -3241,16 +3183,23 @@ export default function Home() {
   }
 
   function renderInventoryRow(item) {
+    // Status is calculated from the Supabase quantity_on_hand and reorder_level fields.
     const status = inventoryStatus(item);
+    // Display formatting keeps grams/ml/pcs readable without changing the stored database value.
     const quantity = inventoryDisplayQuantity(item);
+    // recipes links ingredients to menu_items, so the row knows exactly which iPad dishes depend on this stock item.
     const linkedMenus = menuItemsForIngredient(item.ingredient_id);
+    const linkedMenuNames = linkedMenus.map((menu) => menu.name).join(", ");
+    const linkedMenuLabel = linkedMenus.length ? `Linked: ${linkedMenuNames}` : "No iPad menu link";
+    // The kiosk toggle is on only when every linked menu_items row is available in Supabase.
     const kioskOn = linkedMenus.length > 0 && linkedMenus.every((menu) => menu.is_available);
+    // A manager cannot turn a menu back on while the ingredient has zero stock.
     const canToggle = linkedMenus.length > 0 && (kioskOn || item.quantity_on_hand > 0);
     return (
       <div className="grid grid-cols-[1.4fr_0.65fr_0.75fr_0.75fr_2.45fr] items-center" key={item.ingredient_id}>
         <div className="px-6 py-6">
           <p className="text-base font-bold leading-6 text-[#F7DCDC]">{item.name}</p>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E1BEBE]/60">{linkedMenus.length ? `${linkedMenus.length} iPad menu link${linkedMenus.length === 1 ? "" : "s"}` : "No iPad link"}</p>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.14em] text-[#E1BEBE]/60">{linkedMenuLabel}</p>
         </div>
         <div className="flex items-center gap-3 px-6 py-6">
           <p className={`text-base font-bold leading-6 ${status.key === "in" ? "text-[#F7DCDC]" : "text-[#FFB3B3]"}`}>{quantity.amount}</p>
@@ -3295,12 +3244,13 @@ export default function Home() {
               <path d="M2 16H3.425L13.2 6.225L11.775 4.8L2 14.575V16ZM0 18V13.75L13.2 0.575C13.4 0.391667 13.6208 0.25 13.8625 0.15C14.1042 0.05 14.3583 0 14.625 0C14.8917 0 15.15 0.05 15.4 0.15C15.65 0.25 15.8667 0.4 16.05 0.6L17.425 2C17.625 2.18333 17.7708 2.4 17.8625 2.65C17.9542 2.9 18 3.15 18 3.4C18 3.66667 17.9542 3.92083 17.8625 4.1625C17.7708 4.40417 17.625 4.625 17.425 4.825L4.25 18H0ZM12.475 5.525L11.775 4.8L13.2 6.225L12.475 5.525Z" fill="currentColor" />
             </svg>
           </button>
+          {/* This writes menu_items.is_available through setIngredientKioskAvailability, so the customer iPad query hides affected dishes immediately. */}
           <button
             aria-label={`${kioskOn ? "Hide" : "Show"} linked iPad menus for ${item.name}`}
             aria-pressed={kioskOn}
             className={`relative flex !h-6 !w-12 items-center !rounded-xl !p-0 ${kioskOn ? "!justify-end !bg-[#792E32]" : "!justify-start !border !border-[#594040] !bg-[#413131]"} disabled:!cursor-not-allowed disabled:!opacity-40`}
             disabled={!canToggle}
-            title={linkedMenus.length ? "Kiosk menu visibility" : "No linked customer menu item"}
+            title={linkedMenus.length ? `Kiosk visibility for ${linkedMenuNames}` : "No linked customer menu item"}
             type="button"
             onClick={() => safe(() => setIngredientKioskAvailability(item.ingredient_id, !kioskOn))}
           >

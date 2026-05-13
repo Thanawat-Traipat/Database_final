@@ -36,7 +36,7 @@ This guide explains how the source code, Supabase schema, and report docs fit to
 | Manager dashboard | `calculateDashboardMetrics`, `renderManagerDashboard` | `payments`, `dining_sessions`, `order_items`, `menu_items`, `inventory_transactions`, `inventory_items`, `restaurant_tables` |
 | Manager CRUD | `handleAddMenu`, `softDeleteMenu`, `handleAddIngredient`, `handleAdjustStock`, `handleAddUser`, `restoreRow` | `menu_items`, `inventory_items`, `app_users`, `staff_activity_logs` |
 
-Every successful mutation calls `commit()`, which normalizes the database state and writes it back to Supabase through `syncDatabaseToSupabase()` or `replaceDatabaseInSupabase()`.
+Every successful mutation calls `commit()`, which normalizes the database state and writes it back to Supabase through `syncDatabaseToSupabase()`. Resetting or reseeding demo data is intentionally handled by SQL files in `supabase/` instead of by hidden frontend code, so Supabase remains the source of truth.
 
 ## `supabase/`
 

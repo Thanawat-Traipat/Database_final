@@ -510,8 +510,7 @@ insert into menu_categories (category_id, name) values
   (2, 'Beef'),
   (3, 'Seafood'),
   (4, 'Vegetables'),
-  (5, 'Sides and Drinks'),
-  (6, 'Sides and Drinks')
+  (5, 'Sides and Drinks')
 on conflict (category_id) do update set name = excluded.name;
 
 insert into inventory_items (ingredient_id, name, unit, quantity_on_hand, reorder_level, unit_cost, deleted_at) values
@@ -542,8 +541,8 @@ insert into menu_items (menu_id, category_id, name, description, image_url, is_a
   (6, 4, 'Napa cabbage', 'Fresh vegetable basket', '/menu/napa-cabbage.svg', true, null),
   (7, 4, 'Enoki mushroom', 'Mushroom portion', '/menu/enoki.svg', true, null),
   (8, 5, 'Kimchi fried rice', 'Small rice bowl', '/menu/kimchi-rice.svg', true, null),
-  (9, 6, 'Thai iced tea', 'Refill drink glass', '/menu/thai-tea.svg', true, null),
-  (10, 6, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, now() - interval '1 day')
+  (9, 5, 'Thai iced tea', 'Refill drink glass', '/menu/thai-tea.svg', true, null),
+  (10, 5, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, now() - interval '1 day')
 on conflict (menu_id) do update set
   category_id = excluded.category_id,
   name = excluded.name,
@@ -692,7 +691,7 @@ on conflict (transaction_id) do update set
   unit_cost_snapshot = excluded.unit_cost_snapshot,
   occurred_at = excluded.occurred_at;
 
-select setval(pg_get_serial_sequence('menu_categories', 'category_id'), 6, true);
+select setval(pg_get_serial_sequence('menu_categories', 'category_id'), 5, true);
 select setval(pg_get_serial_sequence('inventory_items', 'ingredient_id'), 10, true);
 select setval(pg_get_serial_sequence('menu_items', 'menu_id'), 10, true);
 select setval(pg_get_serial_sequence('orders', 'order_id'), 1005, true);

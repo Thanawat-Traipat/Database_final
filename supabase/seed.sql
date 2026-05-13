@@ -35,24 +35,27 @@ on conflict (table_code) do update set
   status = excluded.status,
   cleaning_started_at = excluded.cleaning_started_at;
 
+-- Keep the last customer-facing group as one real category because menu_categories.name is unique.
+update menu_items set category_id = 5 where category_id = 6;
+delete from menu_categories where category_id = 6;
+
 insert into menu_categories (category_id, name) values
   (1, 'Pork'),
   (2, 'Beef'),
   (3, 'Seafood'),
   (4, 'Vegetables'),
-  (5, 'Snacks'),
-  (6, 'Drinks')
+  (5, 'Sides and Drinks')
 on conflict (category_id) do update set name = excluded.name;
 
 insert into inventory_items (ingredient_id, name, unit, quantity_on_hand, reorder_level, unit_cost, deleted_at) values
-  (1, 'Pork shoulder', 'g', 9200, 2500, 0.18, null),
-  (2, 'Smoked bacon', 'g', 3200, 1200, 0.24, null),
-  (3, 'Ribeye beef', 'g', 1800, 1500, 0.62, null),
-  (4, 'Squid', 'g', 2600, 1300, 0.31, null),
+  (1, 'Pork belly slices', 'g', 7600, 2200, 0.22, null),
+  (2, 'Pork shoulder slices', 'g', 9200, 2500, 0.18, null),
+  (3, 'Black pepper beef', 'g', 1800, 1500, 0.62, null),
+  (4, 'Fresh squid', 'g', 2600, 1300, 0.31, null),
   (5, 'White shrimp', 'pcs', 48, 60, 5.20, null),
   (6, 'Napa cabbage', 'g', 4200, 1800, 0.05, null),
   (7, 'Enoki mushroom', 'g', 1600, 900, 0.11, null),
-  (8, 'Kimchi rice mix', 'g', 5400, 1200, 0.08, null),
+  (8, 'Kimchi fried rice mix', 'g', 5400, 1200, 0.08, null),
   (9, 'Thai tea concentrate', 'ml', 2100, 800, 0.09, null),
   (10, 'Cola syrup', 'ml', 0, 900, 0.07, now() - interval '1 day')
 on conflict (ingredient_id) do update set
@@ -72,8 +75,8 @@ insert into menu_items (menu_id, category_id, name, description, image_url, is_a
   (6, 4, 'Napa cabbage', 'Fresh vegetable basket', '/menu/napa-cabbage.svg', true, null),
   (7, 4, 'Enoki mushroom', 'Mushroom portion', '/menu/enoki.svg', true, null),
   (8, 5, 'Kimchi fried rice', 'Small rice bowl', '/menu/kimchi-rice.svg', true, null),
-  (9, 6, 'Thai iced tea', 'Refill drink glass', '/menu/thai-tea.svg', true, null),
-  (10, 6, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, now() - interval '1 day')
+  (9, 5, 'Thai iced tea', 'Refill drink glass', '/menu/thai-tea.svg', true, null),
+  (10, 5, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, now() - interval '1 day')
 on conflict (menu_id) do update set
   category_id = excluded.category_id,
   name = excluded.name,
@@ -84,7 +87,7 @@ on conflict (menu_id) do update set
 
 insert into recipes (menu_id, ingredient_id, quantity_used) values
   (1, 1, 120),
-  (2, 2, 90),
+  (2, 2, 120),
   (3, 3, 100),
   (4, 4, 120),
   (5, 5, 6),
@@ -208,9 +211,9 @@ on conflict (activity_id) do update set
   occurred_at = excluded.occurred_at;
 
 insert into inventory_transactions (transaction_id, ingredient_id, order_item_id, transaction_type, quantity_change, unit_cost_snapshot, occurred_at) values
-  (1, 1, 1005, 'usage', -360, 0.18, now() - interval '226 minutes'),
+  (1, 1, 1005, 'usage', -360, 0.22, now() - interval '226 minutes'),
   (2, 8, 1006, 'usage', -360, 0.08, now() - interval '225 minutes'),
-  (3, 2, 1007, 'usage', -360, 0.24, now() - interval '1345 minutes'),
+  (3, 2, 1007, 'usage', -480, 0.18, now() - interval '1345 minutes'),
   (4, 4, 1008, 'usage', -240, 0.31, now() - interval '1346 minutes'),
   (5, 5, 1009, 'usage', -18, 5.20, now() - interval '1328 minutes'),
   (6, 9, 1010, 'usage', -320, 0.09, now() - interval '1331 minutes')
@@ -222,7 +225,7 @@ on conflict (transaction_id) do update set
   unit_cost_snapshot = excluded.unit_cost_snapshot,
   occurred_at = excluded.occurred_at;
 
-select setval(pg_get_serial_sequence('menu_categories', 'category_id'), 6, true);
+select setval(pg_get_serial_sequence('menu_categories', 'category_id'), 5, true);
 select setval(pg_get_serial_sequence('inventory_items', 'ingredient_id'), 10, true);
 select setval(pg_get_serial_sequence('menu_items', 'menu_id'), 10, true);
 select setval(pg_get_serial_sequence('orders', 'order_id'), 1005, true);
