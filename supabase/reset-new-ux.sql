@@ -523,7 +523,7 @@ insert into inventory_items (ingredient_id, name, unit, quantity_on_hand, reorde
   (7, 'Enoki mushroom', 'g', 1600, 900, 0.11, null),
   (8, 'Kimchi fried rice mix', 'g', 5400, 1200, 0.08, null),
   (9, 'Thai tea concentrate', 'ml', 2100, 800, 0.09, null),
-  (10, 'Cola syrup', 'ml', 0, 900, 0.07, now() - interval '1 day')
+  (10, 'Cola syrup', 'ml', 0, 900, 0.07, null)
 on conflict (ingredient_id) do update set
   name = excluded.name,
   unit = excluded.unit,
@@ -542,7 +542,7 @@ insert into menu_items (menu_id, category_id, name, description, image_url, is_a
   (7, 4, 'Enoki mushroom', 'Mushroom portion', '/menu/enoki.svg', true, null),
   (8, 5, 'Kimchi fried rice', 'Small rice bowl', '/menu/kimchi-rice.svg', true, null),
   (9, 5, 'Thai iced tea', 'Refill drink glass', '/menu/thai-tea.svg', true, null),
-  (10, 5, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, now() - interval '1 day')
+  (10, 5, 'Cola', 'Refill drink glass', '/menu/cola.svg', false, null)
 on conflict (menu_id) do update set
   category_id = excluded.category_id,
   name = excluded.name,

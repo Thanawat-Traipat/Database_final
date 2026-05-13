@@ -116,7 +116,8 @@ const CANONICAL_INGREDIENT_REPAIRS = {
   "ingredient-2": { name: "Pork shoulder slices", unit: "g", reorder_level: 2500, unit_cost: 0.18 },
   "ingredient-3": { name: "Black pepper beef", unit: "g", reorder_level: 1500, unit_cost: 0.62 },
   "ingredient-4": { name: "Fresh squid", unit: "g", reorder_level: 1300, unit_cost: 0.31 },
-  "ingredient-8": { name: "Kimchi fried rice mix", unit: "g", reorder_level: 1200, unit_cost: 0.08 }
+  "ingredient-8": { name: "Kimchi fried rice mix", unit: "g", reorder_level: 1200, unit_cost: 0.08 },
+  "ingredient-10": { name: "Cola syrup", unit: "ml", reorder_level: 900, unit_cost: 0.07, deleted_at: null }
 };
 
 // Recipes are the bridge used by the inventory toggle, so each demo menu must point at the matching ingredient.
@@ -168,6 +169,7 @@ function repairMenuInventoryDemoLinks(database) {
 
   database.menu_items.forEach((menu) => {
     if (["menu-8", "menu-9", "menu-10"].includes(menu.menu_id)) menu.category_id = "category-5";
+    if (menu.menu_id === "menu-10") menu.deleted_at = null;
   });
 
   const ingredientById = new Map(database.inventory_items.map((ingredient) => [ingredient.ingredient_id, ingredient]));
