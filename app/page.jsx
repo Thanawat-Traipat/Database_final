@@ -135,7 +135,7 @@ const CANONICAL_RECIPE_REPAIRS = [
 ];
 
 // Supabase is the required source of truth for all business data.
-// If these tables are empty, run supabase/reset-new-ux.sql in the Supabase SQL editor instead of seeding from the UI.
+// If these tables are empty, run supabase/schema.sql and supabase/seed.sql in the Supabase SQL editor instead of seeding from the UI.
 async function loadInitialDatabase() {
   if (!supabaseConfigured) {
     throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_ANON_KEY. Supabase is required.");
@@ -147,7 +147,7 @@ async function loadInitialDatabase() {
     !loaded.menu_items?.length;
 
   if (missingCoreSeedData) {
-    throw new Error("Supabase connected, but required demo data is missing. Run supabase/reset-new-ux.sql in Supabase SQL Editor.");
+    throw new Error("Supabase connected, but required demo data is missing. Run supabase/schema.sql and then supabase/seed.sql in Supabase SQL Editor.");
   }
 
   return loaded;
@@ -411,9 +411,9 @@ export default function Home() {
           <p className="muted">{databaseError}</p>
           <p className="muted">
             {blockedByRls ? "Run " : "Run "}
-            <span className="font-semibold text-[#F8DCDA]">{blockedByRls ? "supabase/public-demo-access.sql" : "supabase/reset-new-ux.sql"}</span>
-            {blockedByRls ? " in Supabase SQL Editor, then refresh this page. For a full rebuild, run " : ", add the two "}
-            {blockedByRls ? <span className="font-semibold text-[#F8DCDA]">supabase/reset-new-ux.sql</span> : null}
+            <span className="font-semibold text-[#F8DCDA]">{blockedByRls ? "supabase/public-demo-access.sql" : "supabase/schema.sql + supabase/seed.sql"}</span>
+            {blockedByRls ? " in Supabase SQL Editor, then refresh this page. For missing demo data, run " : ", add the two "}
+            {blockedByRls ? <span className="font-semibold text-[#F8DCDA]">supabase/schema.sql + supabase/seed.sql</span> : null}
             {blockedByRls ? "." : null}
             {!blockedByRls ? <>
             <span className="font-semibold text-[#F8DCDA]"> NEXT_PUBLIC_SUPABASE_*</span> environment variables, then restart the app.

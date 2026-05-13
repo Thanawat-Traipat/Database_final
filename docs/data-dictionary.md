@@ -1,6 +1,6 @@
 # Data Dictionary
 
-This dictionary matches `supabase/schema.sql` and `supabase/reset-new-ux.sql`.
+This dictionary matches the current `supabase/schema.sql` and `supabase/seed.sql` files.
 
 ## Enum Types
 

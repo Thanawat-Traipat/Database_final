@@ -28,7 +28,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-public-key
 
 `syncDatabaseToSupabase(database)` upserts the current app state back to Supabase after every UI mutation.
 
-The submitted frontend does not contain a reset/demo-seed button. Destructive resets and reseeding are done from the SQL editor with `supabase/reset-new-ux.sql` or `supabase/delete-all-data.sql`, which keeps the submitted application dependent on the database instead of hardcoded in-app seed rows.
+The submitted frontend does not contain a reset/demo-seed button. Database setup is done from the SQL editor with `supabase/schema.sql` followed by `supabase/seed.sql`, which keeps the submitted application dependent on the database instead of hardcoded in-app seed rows.
 
 ## Main Data Flows
 

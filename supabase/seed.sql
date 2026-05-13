@@ -1,5 +1,5 @@
 -- Realistic demo seed for the simplified Yum Yum Buffet schema.
--- Run schema.sql before this file, or run reset-new-ux.sql for a full rebuild.
+-- Run schema.sql before this file so all tables, enums, and functions exist.
 
 insert into app_users (user_id, full_name, username, password_hash, role, is_active, deleted_at) values
   ('00000000-0000-0000-0000-000000000001', 'Narin Cashier', 'cashier', 'demo-hash-cashier123', 'cashier', true, null),

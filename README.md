@@ -12,24 +12,14 @@ This workspace contains a working Next.js website prototype plus Supabase-ready 
 - `tailwind.config.js` and `postcss.config.mjs` support Figma-exported Tailwind utility classes.
 - `package.json` contains the Next.js scripts and dependencies.
 - `vercel.json` pins the Vercel install/build commands for predictable deployment.
-- `supabase/README.md` explains how each Supabase SQL/support file should be used.
 - `supabase/schema.sql` creates the PostgreSQL tables, constraints, enums, indexes, and workflow RPC functions.
-- `supabase/figma-ui-migration.sql` upgrades an older Supabase schema for the Figma UI fields.
 - `supabase/seed.sql` inserts realistic sample data.
-- `supabase/reset-new-ux.sql` clears and rebuilds the Supabase demo database in one run for the new UX/UI.
-- `supabase/delete-all-data.sql` deletes all demo rows while keeping the schema and functions.
 - `supabase/public-demo-access.sql` disables RLS/grants anon access for the class demo if Supabase blocks browser writes.
 - `supabase/queries.sql` contains basic and advanced queries for the report.
-- `supabase/setup-checklist.md` lists the Supabase setup steps and table purposes.
 - `docs/er-diagram.md` contains the corrected ER diagram in Mermaid format.
 - `docs/data-dictionary.md` contains the physical data dictionary with sample rows.
-- `docs/database-quality-review.md` lists strengths and improvement priorities for the database submission.
 - `docs/project-structure-and-logic.md` explains each folder/file and how the app, database, and docs agree.
 - `docs/supabase-sync.md` lists the Supabase tables, environment variables, permissions, and optional realtime setup.
-- `docs/figma-ui-supabase-changes.md` explains the database fields added for the Figma-driven UX.
-- `docs/report-outline.md` gives a rubric-aligned structure for the final PDF/Word report.
-- `docs/prompt-log-template.md` gives an appendix template for the required AI usage log.
-- `docs/requirements-flow.md` maps the assignment requirements to the interface and collected data.
 - `docs/vercel-deployment.md` explains how to deploy the Supabase-only app to Vercel.
 
 ## Demo Accounts
@@ -63,7 +53,7 @@ http://localhost:3000
 
 The app requires Supabase. When `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present, it loads from Supabase and syncs workflow changes back to Supabase. If those values are missing or the database is unreachable, the UI shows a database-required message instead of using local browser storage.
 
-If the Supabase tables exist but required demo rows are missing, the app shows a database setup error and tells you to run `supabase/reset-new-ux.sql`. This keeps Supabase as the required source of truth instead of hiding seed data inside the frontend.
+If the Supabase tables exist but required demo rows are missing, run `supabase/schema.sql` first and then `supabase/seed.sql` in the Supabase SQL Editor. This keeps Supabase as the required source of truth instead of hiding seed data inside the frontend.
 
 ## Recommended Demo Flow
 
@@ -83,16 +73,15 @@ The kitchen login uses the Figma-style Kitchen Display System. It is data-driven
 Required database setup:
 
 1. Create a Supabase project.
-2. For a fresh one-shot reset, paste and run `supabase/reset-new-ux.sql` in the Supabase SQL Editor.
-3. For non-destructive setup, run `supabase/schema.sql`, then `supabase/seed.sql`.
-4. If you already ran the older schema and do not want to wipe data, run `supabase/figma-ui-migration.sql`.
-5. If the app says an RLS policy blocked insert/update, run `supabase/public-demo-access.sql`.
-6. Copy `.env.local.example` to `.env.local` and add your project URL and anon key.
-7. Optional: create a `menu-images` Supabase Storage bucket if you want to replace the bundled `public/menu/*.svg` assets with real uploaded food photos.
-8. Use `supabase/queries.sql` for dashboard/report examples.
-9. Follow `supabase/README.md`, `docs/supabase-sync.md`, `docs/vercel-deployment.md`, `supabase/setup-checklist.md`, and `docs/figma-ui-supabase-changes.md` for table purpose and app integration notes.
+2. Open SQL Editor and run `supabase/schema.sql`.
+3. Run `supabase/seed.sql` to insert demo users, tables, menu items, recipes, sessions, and dashboard data.
+4. If the app says an RLS policy blocked insert/update, run `supabase/public-demo-access.sql`.
+5. Create `.env.local` manually and add your project URL and anon key.
+6. Optional: create a `menu-images` Supabase Storage bucket if you want to replace the bundled `public/menu/*.svg` assets with real uploaded food photos.
+7. Use `supabase/queries.sql` for dashboard/report examples.
+8. Follow `docs/supabase-sync.md` and `docs/vercel-deployment.md` for table purpose and app integration notes.
 
-To wipe all rows without dropping the schema, run `supabase/delete-all-data.sql`.
+For a completely clean database, use a new Supabase project or manually clear/recreate tables in SQL Editor before running `schema.sql` and `seed.sql`.
 
 ## Where To Put Supabase URL And Key
 

@@ -1,5 +1,0 @@
--- Retired migration placeholder.
--- The schema was simplified for the final database-management submission.
--- Use reset-new-ux.sql instead of migrating the older Figma-generated schema,
--- because reset-new-ux.sql removes obsolete shift, reservation, station, prep-time,
--- order-source, note, and recipe_id columns in one clean rebuild.

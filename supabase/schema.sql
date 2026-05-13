@@ -1,5 +1,5 @@
 -- Yum Yum Buffet - simplified Supabase schema.
--- This file is schema-only. For a full rebuild with data, run reset-new-ux.sql.
+-- This file is schema-only. Run seed.sql after it to insert demo data.
 
 create extension if not exists pgcrypto;
 

@@ -7,7 +7,6 @@ This guide explains how the source code, Supabase schema, and report docs fit to
 | Path | Purpose |
 | --- | --- |
 | `README.md` | Quick-start guide, demo accounts, Supabase setup, and Vercel deployment summary |
-| `.env.local.example` | Template for local Supabase URL and anon key |
 | `.gitignore` | Keeps local env files, build output, and dependencies out of Git |
 | `package.json` / `package-lock.json` | Next.js dependencies and npm scripts |
 | `next.config.mjs` | Next.js configuration |
@@ -44,12 +43,8 @@ Every successful mutation calls `commit()`, which normalizes the database state 
 | --- | --- |
 | `schema.sql` | Schema-only file for enum types, tables, constraints, indexes, functions, and grants |
 | `seed.sql` | Realistic seed data for all roles and dashboard metrics |
-| `reset-new-ux.sql` | One-shot destructive rebuild with schema and seed together |
-| `delete-all-data.sql` | Deletes all rows while keeping schema/functions |
 | `public-demo-access.sql` | Disables RLS and grants anon/authenticated table access for the class demo |
 | `queries.sql` | SQL examples mapped to insert, update, soft delete, basic query, and advanced query |
-| `figma-ui-migration.sql` | Retired note; final project uses `reset-new-ux.sql` |
-| `README.md` / `setup-checklist.md` | Supabase setup and schema explanation |
 
 ## `docs/`
 
@@ -57,15 +52,8 @@ Every successful mutation calls `commit()`, which normalizes the database state 
 | --- | --- |
 | `er-diagram.md` | Logical ERD, cardinality, and participation constraints |
 | `data-dictionary.md` | Physical table/column dictionary |
-| `requirements-flow.md` | Mapping to assignment requirements |
-| `database-quality-review.md` | Strengths, indexes, and improvement notes |
 | `supabase-sync.md` | Supabase integration and data-flow notes |
 | `vercel-deployment.md` | Deployment steps |
-| `report-outline.md` | Suggested final report structure |
-| `prompt-log-template.md` | AI usage log template required by the course |
-| `figma-ui-supabase-changes.md` | Historical note about UI/database changes |
-| `source-code-commentary.md` | Technical explanation of the source code for the programming chapter/report appendix |
-| `report-source-code-snippets.md` | Curated real source-code excerpts with Thai inline comments for direct use in the final report |
 
 ## `public/`
 

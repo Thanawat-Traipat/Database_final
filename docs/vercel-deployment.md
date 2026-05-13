@@ -6,13 +6,14 @@ This project is a Supabase-only Next.js app. Do the Supabase setup before deploy
 
 1. Create a Supabase project.
 2. Open SQL Editor.
-3. Run `supabase/reset-new-ux.sql`.
-4. Confirm these demo staff users exist in `app_users`:
+3. Run `supabase/schema.sql`.
+4. Run `supabase/seed.sql`.
+5. Confirm these demo staff users exist in `app_users`:
    - `cashier` / `cashier123`
    - `kitchen` / `kitchen123`
    - `waiter` / `waiter123`
    - `manager` / `manager123`
-5. Keep Row Level Security off for the class demo, or add policies that allow the anon key to read and write the project tables.
+6. Keep Row Level Security off for the class demo, or run `supabase/public-demo-access.sql` to grant demo access.
 
 ## 2. Get The Supabase URL And Anon Key
 
@@ -42,13 +43,7 @@ npm run dev
 
 Open `http://localhost:3000`. If Supabase is connected, the staff login page appears. If environment variables are missing, the app shows a database-required message.
 
-The repository includes `.env.local.example` as the template. You can copy it:
-
-```bash
-cp .env.local.example .env.local
-```
-
-Then replace the placeholder values with the real Supabase values.
+Do not commit `.env.local`. The repository intentionally keeps real Supabase credentials out of Git.
 
 ## 4. Deploy To Vercel
 
