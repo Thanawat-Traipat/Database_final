@@ -63,11 +63,11 @@ http://localhost:3000
 
 The app requires Supabase. When `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` are present, it loads from Supabase and syncs workflow changes back to Supabase. If those values are missing or the database is unreachable, the UI shows a database-required message instead of using local browser storage.
 
-If the Supabase tables exist but the required demo rows are empty, the app automatically bootstraps the demo staff, tables, menu, inventory, sessions, orders, and audit rows on first load. This prevents a fresh Supabase project from getting stuck at the login screen.
+If the Supabase tables exist but required demo rows are missing, the app shows a database setup error and tells you to run `supabase/reset-new-ux.sql`. This keeps Supabase as the required source of truth instead of hiding seed data inside the frontend.
 
 ## Recommended Demo Flow
 
-Use the floating **Role Test Bar** at the bottom of the app to switch between Cashier, Customer, Kitchen, Waiter, and Manager during grading. Staff shortcuts authenticate the Supabase-backed demo users, open a shift when needed, and record the shortcut in `staff_activity_logs`, so the test path remains database-driven.
+Use the floating **Role Test Bar** at the bottom of the app to switch between Cashier, Customer, Kitchen, Waiter, and Manager during grading. Staff shortcuts authenticate the Supabase-backed demo users and record the shortcut in `staff_activity_logs`, so the test path remains database-driven.
 
 1. Login as cashier and open a table.
 2. Open the customer QR demo and place an order.

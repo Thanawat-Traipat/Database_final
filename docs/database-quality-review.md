@@ -32,7 +32,7 @@ This file is a practical checklist for improving the project before submission. 
 | --- | --- | --- |
 | High | Add screenshots to the report manual | The rubric explicitly gives points for usage guide with screenshots |
 | High | Add a prompt log appendix | The assignment requires recording all AI prompts used |
-| High | Add comments around major source-code blocks | The rubric asks for source code comments explaining code; every line may be unrealistic, but each logical block should be documented |
+| Done | Add comments around major source-code blocks | Source files now include explanatory comments, and `docs/source-code-commentary.md` provides a report-ready technical walkthrough |
 | Medium | Enable Supabase Realtime | Lets cashier, kitchen, waiter, customer, and manager screens update across separate devices without refresh |
 | Medium | Add Row Level Security policies | Better security story for Vercel deployment; for class demo, RLS can stay off if explained |
 | Medium | Replace demo password hashes | Use Supabase Auth or server-side hashing for a production-grade login |
@@ -66,3 +66,4 @@ Use these exact files as report sources:
 - Vercel deployment: `docs/vercel-deployment.md`
 - Requirement mapping: `docs/requirements-flow.md`
 - Project structure and logic: `docs/project-structure-and-logic.md`
+- Source code explanation: `docs/source-code-commentary.md`

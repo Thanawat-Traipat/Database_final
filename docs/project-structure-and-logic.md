@@ -64,6 +64,8 @@ Every successful mutation calls `commit()`, which normalizes the database state 
 | `report-outline.md` | Suggested final report structure |
 | `prompt-log-template.md` | AI usage log template required by the course |
 | `figma-ui-supabase-changes.md` | Historical note about UI/database changes |
+| `source-code-commentary.md` | Technical explanation of the source code for the programming chapter/report appendix |
+| `report-source-code-snippets.md` | Curated real source-code excerpts with Thai inline comments for direct use in the final report |
 
 ## `public/`
 

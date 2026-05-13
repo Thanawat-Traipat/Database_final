@@ -22,6 +22,7 @@ That script drops old project objects, recreates the simplified schema, inserts 
 | `delete-all-data.sql` | Destructive row wipe only; keeps schema/functions but removes all data |
 | `public-demo-access.sql` | Disables RLS and grants anon/authenticated access for the class demo web app |
 | `queries.sql` | Insert, update, soft delete, basic query, and advanced query examples for the assignment |
+| `fix-live-inventory-menu-links.sql` | Non-destructive repair for older live Supabase data so menu, recipe, inventory, and Sides & Drinks links match the final UI |
 | `figma-ui-migration.sql` | Retired note; use `reset-new-ux.sql` for the final simplified schema |
 | `setup-checklist.md` | Human setup checklist and table purpose summary |
 

@@ -99,8 +99,10 @@ Use the real source files:
 - `app/lib/supabaseDatabase.js`
 - `supabase/schema.sql`
 - `supabase/seed.sql`
+- `docs/source-code-commentary.md`
+- `docs/report-source-code-snippets.md`
 
-The rubric asks for comments explaining source code. If there is not enough time to comment every line in the actual files, add a report appendix that explains each major function and SQL block.
+The source files contain block comments for the important code paths. Use `docs/source-code-commentary.md` for the high-level explanation, and paste selected commented excerpts from `docs/report-source-code-snippets.md` into the report when the rubric asks for source code with comments.
 
 ## 9. AI Usage Log
 

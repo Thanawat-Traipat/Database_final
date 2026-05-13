@@ -184,3 +184,117 @@ Purpose: stock movement ledger.
 | `quantity_change` | `numeric(12,2)` | Not null | Negative for usage, positive/negative for manual adjustment |
 | `unit_cost_snapshot` | `numeric(12,4)` | Not null, default 0 | Cost copied when movement occurs |
 | `occurred_at` | `timestamptz` | Not null, default now | Movement time |
+
+## Sample Data
+
+The following examples are taken from the current seed/reset dataset. Each table shows fewer than 10 rows as required by the report rubric.
+
+### `app_users`
+
+| username | full_name | role | is_active |
+| --- | --- | --- | --- |
+| `cashier` | Cashier Demo | cashier | true |
+| `kitchen` | Kitchen Demo | kitchen | true |
+| `waiter` | Waiter Demo | waiter | true |
+| `manager` | Manager Demo | manager | true |
+
+### `restaurant_tables`
+
+| table_code | capacity | status |
+| --- | --- | --- |
+| `01` | 4 | available |
+| `02` | 4 | occupied |
+| `03` | 4 | available |
+| `05` | 4 | billing |
+| `15` | 4 | billing |
+
+### `menu_categories`
+
+| category_id | name |
+| --- | --- |
+| 1 | Pork |
+| 2 | Beef |
+| 3 | Seafood |
+| 4 | Vegetables |
+| 5 | Sides and Drinks |
+
+### `inventory_items`
+
+| ingredient_id | name | unit | quantity_on_hand | reorder_level | unit_cost |
+| --- | --- | --- | ---: | ---: | ---: |
+| 1 | Pork belly slices | g | 9200 | 2200 | 0.22 |
+| 2 | Pork shoulder slices | g | 9200 | 2500 | 0.18 |
+| 3 | Black pepper beef | g | 1800 | 1500 | 0.62 |
+| 5 | White shrimp | pcs | 48 | 60 | 5.20 |
+| 10 | Cola syrup | ml | 0 | 900 | 0.07 |
+
+### `menu_items`
+
+| menu_id | category_id | name | is_available | image_url |
+| --- | --- | --- | --- | --- |
+| 1 | 1 | Marinated Pork Belly | true | `/menu/pork-belly.svg` |
+| 2 | 1 | Premium Pork Shoulder | true | `/menu/pork-shoulder.svg` |
+| 5 | 3 | White shrimp | true | `/menu/shrimp.svg` |
+| 8 | 5 | Kimchi fried rice | true | `/menu/kimchi-rice.svg` |
+| 10 | 5 | Cola | false | `/menu/cola.svg` |
+
+### `recipes`
+
+| menu_id | ingredient_id | quantity_used |
+| --- | --- | ---: |
+| 1 | 1 | 120 |
+| 2 | 2 | 120 |
+| 5 | 5 | 6 |
+| 8 | 8 | 180 |
+| 10 | 10 | 70 |
+
+### `dining_sessions`
+
+| session_id | table_code | adult_count | child_count | status | payment_status |
+| --- | --- | ---: | ---: | --- | --- |
+| `10000000-0000-0000-0000-000000001001` | `02` | 3 | 1 | open | unpaid |
+| `10000000-0000-0000-0000-000000001002` | `05` | 2 | 1 | open | unpaid |
+| `10000000-0000-0000-0000-000000001003` | `06` | 2 | 0 | open | unpaid |
+
+### `orders`
+
+| order_id | session_id | status |
+| --- | --- | --- |
+| 1001 | `10000000-0000-0000-0000-000000001001` | open |
+| 1002 | `10000000-0000-0000-0000-000000001001` | open |
+| 1003 | `10000000-0000-0000-0000-000000001002` | completed |
+
+### `order_items`
+
+| order_item_id | order_id | menu_id | quantity | status | priority_level |
+| --- | --- | --- | ---: | --- | --- |
+| 1001 | 1001 | 1 | 2 | cooking | normal |
+| 1002 | 1001 | 6 | 1 | ready | rush |
+| 1003 | 1002 | 3 | 1 | pending | rush |
+| 1004 | 1002 | 5 | 2 | pending | normal |
+| 1005 | 1003 | 1 | 3 | served | normal |
+
+### `payments`
+
+| payment_id | session_id | method | paid_amount | status |
+| --- | --- | --- | ---: | --- |
+| 1 | `10000000-0000-0000-0000-000000001008` | cash | 798 | paid |
+| 2 | `10000000-0000-0000-0000-000000001009` | cash | 2114 | paid |
+
+### `staff_activity_logs`
+
+| activity_id | action | entity_type | entity_id |
+| --- | --- | --- | --- |
+| 1 | login | app_user | cashier user id |
+| 2 | open_table | dining_session | session id |
+| 3 | mark_order_item_ready | order_item | order item id |
+| 4 | serve_item | order_item | order item id |
+
+### `inventory_transactions`
+
+| transaction_id | ingredient_id | transaction_type | quantity_change | unit_cost_snapshot |
+| --- | --- | --- | ---: | ---: |
+| 1 | 1 | usage | -240 | 0.22 |
+| 2 | 6 | usage | -150 | 0.05 |
+| 3 | 5 | usage | -12 | 5.20 |
+| 4 | 8 | usage | -360 | 0.08 |
